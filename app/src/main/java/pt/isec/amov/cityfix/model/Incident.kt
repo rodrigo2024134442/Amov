@@ -13,6 +13,9 @@ data class Incident(
     // Identificador único do incidente (gerado automaticamente como UUID em formato String)
     val id: String = UUID.randomUUID().toString(),
 
+    // Identificador do munícipe registado que submeteu o reporte
+    val userId: String,
+
     // Título breve e descritivo do problema reportado
     val title: String,
 
@@ -41,5 +44,8 @@ data class Incident(
     val status: String = "Aberto",
 
     // Carimbo de data/hora (Unix Epoch em milissegundos) registado no momento da criação
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+
+    // Data/hora em que a ocorrência passou a "Resolvido" (utilizado para validar o limite de 5 dias para reabertura)
+    val resolvedAt: Long? = null
 )

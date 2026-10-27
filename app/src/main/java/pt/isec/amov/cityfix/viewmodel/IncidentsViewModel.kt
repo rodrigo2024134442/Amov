@@ -17,6 +17,7 @@ class IncidentsViewModel : ViewModel() {
     private val incidentsListModel = IncidentsList(
         listOf(
             Incident(
+                userId = "user_demo_1",
                 title = "Buraco na via",
                 description = "Buraco profundo na faixa direita",
                 category = "Vias Públicas",
@@ -27,6 +28,7 @@ class IncidentsViewModel : ViewModel() {
                 mediaPath = ""
             ),
             Incident(
+                userId = "user_demo_2",
                 title = "Lâmpada fundida",
                 description = "Poste de iluminação sem luz",
                 category = "Iluminação",
@@ -39,7 +41,9 @@ class IncidentsViewModel : ViewModel() {
         )
     )
 
-    // StateFlow mutável interno que armazena a lista atual de incidentes ordenada
+    /**
+     * StateFlow interno que armazena a lista de incidentes ordenada.
+     */
     private val _incidentsList = MutableStateFlow(incidentsListModel.getAllSorted())
 
     /**
@@ -52,4 +56,12 @@ class IncidentsViewModel : ViewModel() {
      * consultando o modelo subjacente.
      */
     fun getIncidentById(id: String): Incident? = incidentsListModel.findById(id)
+
+    /**
+     * Adiciona um novo incidente à lista e atualiza o StateFlow para notificar a UI.
+     */
+    fun addIncident(incident: Incident) {
+        incidentsListModel.add(incident)
+        _incidentsList.value = incidentsListModel.getAllSorted()
+    }
 }
