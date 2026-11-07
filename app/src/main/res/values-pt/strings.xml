@@ -1,0 +1,112 @@
+<resources>
+    <!-- Barra de topo -->
+    <string name="action_back">Voltar</string>
+    <string name="action_toggle_view">Alternar visualização</string>
+    <string name="action_add_incident">Reportar ocorrência</string>
+
+    <!-- Lista -->
+    <string name="no_incidents">Sem ocorrências registadas.</string>
+    <string name="no_media">Sem fotografia</string>
+
+    <!-- Detalhe -->
+    <string name="incident_not_found">Ocorrência não encontrada.</string>
+    <string name="action_edit_incident">Editar ocorrência</string>
+    <string name="action_delete_incident">Apagar ocorrência</string>
+    <string name="label_category">Categoria: %1$s</string>
+    <string name="label_status">Estado: %1$s</string>
+    <string name="label_situation">Situação: %1$s</string>
+    <string name="label_scope">Alcance: %1$s</string>
+    <string name="label_coordinates">Coordenadas: %1$s, %2$s</string>
+    <string name="no_coordinates">Localização por definir</string>
+    <string name="delete_title">Apagar ocorrência?</string>
+    <string name="delete_text">Esta ocorrência vai ser removida definitivamente.</string>
+    <string name="delete_confirm">Apagar</string>
+    <string name="cancel">Cancelar</string>
+
+    <!-- Formulário -->
+    <string name="field_title">Título</string>
+    <string name="field_description">Descrição</string>
+    <string name="field_category">Categoria</string>
+    <string name="field_situation">Situação</string>
+    <string name="field_scope">Alcance</string>
+    <string name="action_save">Gravar</string>
+    <string name="error_title_empty">O título não pode estar vazio</string>
+    <string name="error_description_short">A descrição tem de ter pelo menos 10 caracteres</string>
+
+    <!-- Valores dos enums -->
+    <string name="situation_damage">Dano</string>
+    <string name="situation_malfunction">Avaria</string>
+    <string name="situation_destruction">Destruição</string>
+    <string name="situation_theft">Roubo</string>
+    <string name="scope_public">Público</string>
+    <string name="scope_private">Privado</string>
+    <string name="status_open">Aberto</string>
+    <string name="status_info_requested">Pedido de informações</string>
+    <string name="status_in_progress">Em resolução</string>
+    <string name="status_resolved">Resolvido</string>
+    <string name="status_closed">Encerrado</string>
+
+    <!-- Fotografias -->
+    <string name="incident_photo">Fotografia da ocorrência</string>
+    <string name="action_gallery">Galeria</string>
+    <string name="action_camera">Câmara</string>
+    <string name="action_remove_photo">Retirar fotografia</string>
+    <string name="label_photos">Fotografias (%1$d/%2$d)</string>
+    <string name="error_media_required">Anexe pelo menos uma fotografia</string>
+
+    <!-- Autenticação e perfis -->
+    <string name="login_title">Entrar no CityFix</string>
+    <string name="field_email">E-mail</string>
+    <string name="field_password">Palavra-passe</string>
+    <string name="field_name">Nome completo</string>
+    <string name="field_phone">Telefone</string>
+    <string name="field_nif">NIF</string>
+    <string name="field_impact_detection">Deteção de impactos</string>
+    <string name="role_citizen">Munícipe</string>
+    <string name="role_operator">Operador municipal</string>
+    <string name="operator_email_hint">As contas com e-mail @%1$s são registadas como operador municipal.</string>
+    <string name="register_pending_hint">A conta fica pendente até os serviços camarários a validarem pelo NIF.</string>
+    <string name="action_sign_in">Entrar</string>
+    <string name="action_forgot_password">Esqueceu-se da palavra-passe?</string>
+    <string name="action_create_account">Criar conta</string>
+    <string name="action_register">Registar</string>
+    <string name="action_sign_out">Sair</string>
+    <string name="action_login">Entrar</string>
+    <string name="action_profile">Perfil</string>
+    <string name="action_validate_users">Validar munícipes</string>
+    <string name="action_categories">Categorias</string>
+    <string name="action_activate">Ativar</string>
+    <string name="action_add_category">Adicionar categoria</string>
+    <string name="action_create_default_categories">Criar categorias de exemplo</string>
+    <string name="category_dialog_title">Categoria</string>
+    <string name="mfa_title">Código do autenticador</string>
+    <string name="mfa_text">Introduza o código de 6 dígitos que a app autenticadora mostra para %1$s.</string>
+    <string name="mfa_setup_title">Configurar a verificação em dois passos</string>
+    <string name="mfa_setup_text">Leia o QR code com uma app autenticadora (Google Authenticator, Microsoft Authenticator…) ou escreva a chave abaixo. Depois introduza o código que ela mostra.</string>
+    <string name="mfa_qr_description">QR code para a app autenticadora</string>
+    <string name="action_open_authenticator">Abrir na app autenticadora</string>
+    <string name="no_authenticator">Não há nenhuma app autenticadora neste telemóvel. Leia o QR code ou escreva a chave.</string>
+    <string name="field_code">Código de 6 dígitos</string>
+    <string name="action_confirm">Confirmar</string>
+    <string name="mfa_wrong_code">Código errado. Confirme que a hora do telemóvel está certa e tente outra vez.</string>
+    <string name="profile_photo">Fotografia de perfil</string>
+    <string name="photo_optional">Fotografia (opcional)</string>
+    <string name="pending_title">Bem-vindo, %1$s</string>
+    <string name="pending_text">O seu registo está à espera de validação pelos serviços camarários.</string>
+    <string name="reset_sent">Enviámos um e-mail para definir uma palavra-passe nova.</string>
+    <string name="label_email">E-mail: %1$s</string>
+    <string name="label_nif">NIF: %1$s</string>
+    <string name="no_pending_users">Não há registos à espera de validação.</string>
+    <string name="filter_mine">As minhas</string>
+    <string name="filter_public">Públicas</string>
+    <string name="error_email">E-mail inválido</string>
+    <string name="error_password">A palavra-passe tem de ter pelo menos 6 caracteres</string>
+    <string name="error_name_empty">O nome não pode estar vazio</string>
+    <string name="error_phone">Telefone inválido (9 dígitos)</string>
+    <string name="error_nif">NIF inválido (9 dígitos)</string>
+    <string name="error_nif_used">Este NIF já está registado</string>
+    <string name="error_email_used">Este e-mail já está registado</string>
+    <string name="error_login">E-mail ou palavra-passe errados</string>
+    <string name="error_network">Sem ligação à internet</string>
+    <string name="error_generic">Ocorreu um erro. Tente novamente.</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Mapeia context.filesDir + "/images/" para content://${applicationId}.fileprovider/incident_images/ -->
+    <files-path
+        name="incident_images"
+        path="images/" />
+</paths>
