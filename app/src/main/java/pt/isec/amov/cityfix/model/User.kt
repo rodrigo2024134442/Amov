@@ -1,50 +1,52 @@
 package pt.isec.amov.cityfix.model
 
-import kotlinx.serialization.Serializable
-import java.util.UUID
+/**
+ * Perfil de um utilizador autenticado (enunciado, secção I). O anónimo não tem perfil:
+ * é simplesmente quem ainda não iniciou sessão.
+ */
+enum class UserRole { CITIZEN, OPERATOR }
 
 /**
- * Define os diferentes perfis de utilizador suportados pela plataforma CityFix,
- * conforme exigido no enunciado para distinguir permissões e acessos.
+ * O munícipe fica PENDING até um operador o validar pelo NIF; o operador fica logo ACTIVE.
  */
-@Serializable
-enum class UserProfileType {
-    ANONYMOUS,
-    REGISTERED_CITIZEN,
-    OPERATOR
-}
+enum class UserStatus { PENDING, ACTIVE }
 
 /**
- * Representa um utilizador registado ou operador na aplicação CityFix,
- * armazenando dados pessoais, credenciais, georreferenciação e estado de validação por NIF.
+ * Dados de um utilizador registado, guardados no Firestore em users/{uid}
+ * (o uid é o identificador do Firebase Authentication).
  */
-@Serializable
 data class User(
-    // Identificador único do utilizador (gerado automaticamente como UUID)
-    val id: String = UUID.randomUUID().toString(),
+    // Identificador do Firebase Authentication (também é o ID do documento)
+    val uid: String,
 
-    // Nome completo do utilizador
+    // Nome completo (não pode ser alterado depois do registo)
     val name: String,
 
-    // Endereço de correio eletrónico para autenticação e contacto
+    // E-mail de autenticação
     val email: String,
 
-    // Número de contacto telefónico
+    // Número de telefone (9 dígitos)
     val phone: String,
 
-    // Número de Identificação Fiscal (NIF) único, sujeito a validação camarária
+    // NIF, único por tipo de perfil (não pode ser alterado depois do registo)
     val nif: String,
 
-    // Coordenadas geográficas associadas ao registo do munícipe
-    val latitude: Double,
-    val longitude: Double,
+    // Munícipe ou operador
+    val role: UserRole,
 
-    // Tipo de perfil atribuído (Munícipe Registado ou Operador Municipal)
-    val profileType: UserProfileType = UserProfileType.REGISTERED_CITIZEN,
+    // Pendente ou ativo
+    val status: UserStatus,
 
-    // Indica se o registo foi validado/ativado pelo operador municipal através do NIF
-    val isValidated: Boolean = false,
+    // Só munícipes: se quer a funcionalidade "Deteção de Impactos"
+    val impactDetection: Boolean = false,
 
-    // Caminho opcional para a fotografia de perfil do utilizador
-    val avatarPath: String? = null
+    // Endereço da fotografia de perfil no Storage (opcional)
+    val photoUrl: String? = null,
+
+    // Georreferenciação do munícipe (preenchida na aula de GPS)
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+
+    // Data do registo (Unix Epoch em milissegundos)
+    val createdAt: Long = System.currentTimeMillis()
 )

@@ -1,5 +1,4 @@
-Como tratar testes na distancia? aninimo e operacional
-como tratar de testes com nif?
-Como valida ser munícipe ou não?
-língua? mudo no aparelho ou na app ou nos 2?
-Permissões? tudo o que utilizarmos deve ter gestão de permissões?
+autenticação com QRcode na aplicação, ok?
+recuperação de pass só funciona com emails reias? devem ser reais?
+
+ 

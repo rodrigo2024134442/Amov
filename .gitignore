@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Contas de teste com credenciais (não partilhar no repositório)
+docs/CONTAS_DE_TESTE.md

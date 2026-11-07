@@ -22,30 +22,45 @@ data class Incident(
     // Explicação detalhada com informações adicionais sobre a ocorrência
     val description: String,
 
-    // Área técnica do problema (Ex: "Vias Públicas", "Água", "Iluminação", "Saneamento")
+    // Nome da categoria (Ex: "Vias Públicas", "Água", "Iluminação", "Saneamento"), escolhida entre as ativas
     val category: String,
 
-    // Natureza ou gravidade do sinistro (Ex: "Dano", "Avaria", "Destruição", "Roubo")
-    val situation: String,
+    // Natureza do problema: Dano, Avaria, Destruição ou Roubo
+    val situation: Situation,
 
-    // Âmbito territorial ou de propriedade da ocorrência ("Público" ou "Privado")
-    val scope: String,
+    // Alcance da ocorrência: pública ou privada
+    val scope: Scope,
 
-    // Coordenada de latitude para o mapeamento e cálculos de proximidade/raios
-    val latitude: Double,
+    // Coordenadas GPS (null até à aula de GPS, em que passam a ser preenchidas no registo)
+    val latitude: Double? = null,
+    val longitude: Double? = null,
 
-    // Coordenada de longitude para o mapeamento e cálculos de proximidade/raios
-    val longitude: Double,
+    // Caminhos locais das imagens/vídeos anexados (o enunciado exige pelo menos um)
+    val mediaPaths: List<String> = emptyList(),
 
-    // Caminho local ou URI de rede correspondente à imagem ou vídeo obrigatório do reporte
-    val mediaPath: String,
+    // Endereços das imagens no Firebase Storage (preenchidos pelo MediaUploadWorker depois do envio)
+    val mediaUrls: List<String> = emptyList(),
 
-    // Estado atual no ciclo de vida: "Aberto", "Pedido de Informações", "Em Resolução", "Resolvido", "Encerrado"
-    val status: String = "Aberto",
+    // Endereço da miniatura no Firebase Storage
+    val thumbnailUrl: String? = null,
+
+    // Estado atual no ciclo de vida do ticket
+    val status: IncidentStatus = IncidentStatus.OPEN,
 
     // Carimbo de data/hora (Unix Epoch em milissegundos) registado no momento da criação
     val timestamp: Long = System.currentTimeMillis(),
 
     // Data/hora em que a ocorrência passou a "Resolvido" (utilizado para validar o limite de 5 dias para reabertura)
-    val resolvedAt: Long? = null
-)
+    val resolvedAt: Long? = null,
+
+    // Estado de sincronização com a nuvem (PENDING_SYNC enquanto só existe no dispositivo)
+    val syncStatus: SyncStatus = SyncStatus.PENDING_SYNC
+) {
+    // Imagens a mostrar: as da nuvem (visíveis em qualquer dispositivo) ou, antes do envio, as locais
+    val displayMedia: List<String>
+        get() = mediaUrls.ifEmpty { mediaPaths }
+
+    // Miniatura a mostrar na lista: a da nuvem ou, antes do envio, a primeira imagem local
+    val displayThumbnail: String?
+        get() = thumbnailUrl ?: mediaPaths.firstOrNull()
+}

@@ -20,3 +20,24 @@ data class IncidentDetailsRoute(val incidentId: String)
  */
 @Serializable
 data class EditIncidentRoute(val incidentId: String? = null)
+
+/**
+ * Rotas da autenticação e do perfil.
+ */
+@Serializable
+data object LoginRoute
+
+@Serializable
+data object RegisterRoute
+
+@Serializable
+data object ProfileRoute
+
+/**
+ * Rotas do operador: validar munícipes e gerir categorias.
+ */
+@Serializable
+data object ValidateUsersRoute
+
+@Serializable
+data object CategoriesRoute

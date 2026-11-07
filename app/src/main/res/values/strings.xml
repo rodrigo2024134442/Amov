@@ -1,3 +1,114 @@
 <resources>
     <string name="app_name">CityFix</string>
+
+    <!-- Barra de topo -->
+    <string name="action_back">Back</string>
+    <string name="action_toggle_view">Toggle view</string>
+    <string name="action_add_incident">Report incident</string>
+
+    <!-- Lista -->
+    <string name="no_incidents">No incidents reported.</string>
+    <string name="no_media">No photo</string>
+
+    <!-- Detalhe -->
+    <string name="incident_not_found">Incident not found.</string>
+    <string name="action_edit_incident">Edit incident</string>
+    <string name="action_delete_incident">Delete incident</string>
+    <string name="label_category">Category: %1$s</string>
+    <string name="label_status">Status: %1$s</string>
+    <string name="label_situation">Situation: %1$s</string>
+    <string name="label_scope">Scope: %1$s</string>
+    <string name="label_coordinates">Coordinates: %1$s, %2$s</string>
+    <string name="no_coordinates">Location not set</string>
+    <string name="delete_title">Delete incident?</string>
+    <string name="delete_text">This incident will be permanently removed.</string>
+    <string name="delete_confirm">Delete</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Formulário -->
+    <string name="field_title">Title</string>
+    <string name="field_description">Description</string>
+    <string name="field_category">Category</string>
+    <string name="field_situation">Situation</string>
+    <string name="field_scope">Scope</string>
+    <string name="action_save">Save</string>
+    <string name="error_title_empty">Title cannot be empty</string>
+    <string name="error_description_short">Description must have at least 10 characters</string>
+
+    <!-- Valores dos enums -->
+    <string name="situation_damage">Damage</string>
+    <string name="situation_malfunction">Malfunction</string>
+    <string name="situation_destruction">Destruction</string>
+    <string name="situation_theft">Theft</string>
+    <string name="scope_public">Public</string>
+    <string name="scope_private">Private</string>
+    <string name="status_open">Open</string>
+    <string name="status_info_requested">Information requested</string>
+    <string name="status_in_progress">In progress</string>
+    <string name="status_resolved">Resolved</string>
+    <string name="status_closed">Closed</string>
+
+    <!-- Fotografias -->
+    <string name="incident_photo">Incident photo</string>
+    <string name="action_gallery">Gallery</string>
+    <string name="action_camera">Camera</string>
+    <string name="action_remove_photo">Remove photo</string>
+    <string name="label_photos">Photos (%1$d/%2$d)</string>
+    <string name="error_media_required">Attach at least one photo</string>
+
+    <!-- Autenticação e perfis -->
+    <string name="login_title">Sign in to CityFix</string>
+    <string name="field_email">E-mail</string>
+    <string name="field_password">Password</string>
+    <string name="field_name">Full name</string>
+    <string name="field_phone">Phone</string>
+    <string name="field_nif">NIF (tax number)</string>
+    <string name="field_impact_detection">Impact detection</string>
+    <string name="role_citizen">Citizen</string>
+    <string name="role_operator">Municipal operator</string>
+    <string name="operator_email_hint">Accounts with an e-mail address @%1$s are registered as municipal operators.</string>
+    <string name="register_pending_hint">Your account stays pending until the municipal services validate it by NIF.</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_forgot_password">Forgot password?</string>
+    <string name="action_create_account">Create account</string>
+    <string name="action_register">Register</string>
+    <string name="action_sign_out">Sign out</string>
+    <string name="action_login">Sign in</string>
+    <string name="action_profile">Profile</string>
+    <string name="action_validate_users">Validate citizens</string>
+    <string name="action_categories">Categories</string>
+    <string name="action_activate">Activate</string>
+    <string name="action_add_category">Add category</string>
+    <string name="action_create_default_categories">Create example categories</string>
+    <string name="category_dialog_title">Category</string>
+    <string name="mfa_title">Authenticator code</string>
+    <string name="mfa_text">Enter the 6-digit code that your authenticator app shows for %1$s.</string>
+    <string name="mfa_setup_title">Set up two-step verification</string>
+    <string name="mfa_setup_text">Scan the QR code with an authenticator app (Google Authenticator, Microsoft Authenticator…), or type the key below. Then enter the code it shows.</string>
+    <string name="mfa_qr_description">QR code for the authenticator app</string>
+    <string name="action_open_authenticator">Open in authenticator app</string>
+    <string name="no_authenticator">No authenticator app found on this phone. Scan the QR code or type the key.</string>
+    <string name="field_code">6-digit code</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="mfa_wrong_code">Wrong code. Make sure the phone clock is correct and try again.</string>
+    <string name="profile_photo">Profile photo</string>
+    <string name="photo_optional">Photo (optional)</string>
+    <string name="pending_title">Welcome, %1$s</string>
+    <string name="pending_text">Your registration is waiting to be validated by the municipal services.</string>
+    <string name="reset_sent">We sent you an e-mail to set a new password.</string>
+    <string name="label_email">E-mail: %1$s</string>
+    <string name="label_nif">NIF: %1$s</string>
+    <string name="no_pending_users">No registrations waiting for validation.</string>
+    <string name="filter_mine">My incidents</string>
+    <string name="filter_public">Public</string>
+    <string name="error_email">Invalid e-mail address</string>
+    <string name="error_password">Password must have at least 6 characters</string>
+    <string name="error_name_empty">Name cannot be empty</string>
+    <string name="error_phone">Invalid phone number (9 digits)</string>
+    <string name="error_nif">Invalid NIF (9 digits)</string>
+    <string name="error_nif_used">This NIF is already registered</string>
+    <string name="error_email_used">This e-mail is already registered</string>
+    <string name="error_login">Wrong e-mail or password</string>
+    <string name="error_network">No internet connection</string>
+    <string name="error_generic">Something went wrong. Try again.</string>
 </resources>
