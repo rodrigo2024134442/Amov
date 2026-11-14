@@ -5,13 +5,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,12 +26,20 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import pt.isec.amov.cityfix.R
 import pt.isec.amov.cityfix.model.Incident
 import pt.isec.amov.cityfix.ui.components.IncidentPhotoGallery
@@ -36,7 +48,7 @@ import pt.isec.amov.cityfix.ui.components.label
 /**
  * Ecrã stateless que apresenta os detalhes completos de um incidente selecionado.
  * Inclui botões flutuantes para editar e apagar (com confirmação) a ocorrência, só para o autor.
- * As coordenadas só aparecem ao autor e ao operador (o anónimo vê o detalhe sem georreferenciação).
+ * As coordenadas e o mapa Google Maps só aparecem ao autor e ao operador (Ficha 10).
  */
 @Composable
 fun ShowScreen(
@@ -57,7 +69,6 @@ fun ShowScreen(
         return
     }
 
-    // rememberSaveable: a caixa de confirmação continua aberta depois de rodar o ecrã
     var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
 
     if (showDeleteDialog) {
@@ -137,12 +148,41 @@ fun ShowScreen(
                 style = MaterialTheme.typography.bodyMedium
             )
             if (showLocation) {
-                Text(
-                    text = if (incident.latitude != null && incident.longitude != null)
-                        stringResource(R.string.label_coordinates, incident.latitude.toString(), incident.longitude.toString())
-                    else stringResource(R.string.no_coordinates),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                incident.address?.let { addr ->
+                    Text(
+                        text = "Morada: $addr",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                if (incident.latitude != null && incident.longitude != null) {
+                    val incidentLatLng = LatLng(incident.latitude, incident.longitude)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    ) {
+                        GoogleMap(
+                            modifier = Modifier.fillMaxSize(),
+                            cameraPositionState = rememberCameraPositionState {
+                                position = CameraPosition.fromLatLngZoom(incidentLatLng, 15f)
+                            }
+                        ) {
+                            val markerState = remember(incidentLatLng) {
+                                MarkerState(position = incidentLatLng)
+                            }
+                            Marker(
+                                state = markerState,
+                                title = incident.title
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.no_coordinates),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
     }

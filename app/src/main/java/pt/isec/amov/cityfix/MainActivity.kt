@@ -195,6 +195,8 @@ class MainActivity : ComponentActivity() {
                         onScopeChange = editViewModel::onScopeChanged,
                         onMediaAttached = editViewModel::onMediaAttached,
                         onMediaRemoved = editViewModel::onMediaRemoved,
+                        onAddressChange = editViewModel::onAddressChanged,
+                        onLocationSelected = editViewModel::onLocationSelected,
                         onSaveClick = {
                             // A lista atualiza-se sozinha (snapshot listener do Firestore)
                             editViewModel.saveIncident { navController.popBackStack() }

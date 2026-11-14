@@ -16,6 +16,9 @@ data class EditIncidentUiState(
     val situation: Situation? = null,
     val scope: Scope = Scope.PUBLIC,
     val mediaPaths: List<String> = emptyList(),
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val address: String = "",
     val titleError: Int? = null,
     val descriptionError: Int? = null,
     val isSaving: Boolean = false

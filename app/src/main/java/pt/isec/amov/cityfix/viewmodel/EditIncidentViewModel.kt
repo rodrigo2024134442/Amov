@@ -57,7 +57,10 @@ class EditIncidentViewModel(
                     category = i.category,
                     situation = i.situation,
                     scope = i.scope,
-                    mediaPaths = i.mediaPaths
+                    mediaPaths = i.mediaPaths,
+                    latitude = i.latitude,
+                    longitude = i.longitude,
+                    address = i.address ?: ""
                 )
             }
         }
@@ -91,6 +94,16 @@ class EditIncidentViewModel(
 
     fun onScopeChanged(newScope: Scope) {
         _editState.update { it.copy(scope = newScope) }
+    }
+
+    fun onAddressChanged(newAddress: String) {
+        _editState.update { it.copy(address = newAddress) }
+    }
+
+    fun onLocationSelected(lat: Double, lng: Double, address: String) {
+        _editState.update {
+            it.copy(latitude = lat, longitude = lng, address = address)
+        }
     }
 
     /**
@@ -140,8 +153,9 @@ class EditIncidentViewModel(
             category = current.category,
             situation = current.situation!!,
             scope = current.scope,
-            latitude = base?.latitude,
-            longitude = base?.longitude,
+            latitude = current.latitude,
+            longitude = current.longitude,
+            address = current.address.ifBlank { null },
             mediaPaths = current.mediaPaths,
             mediaUrls = kept?.mediaUrls ?: emptyList(),
             thumbnailUrl = kept?.thumbnailUrl,

@@ -31,9 +31,12 @@ data class Incident(
     // Alcance da ocorrência: pública ou privada
     val scope: Scope,
 
-    // Coordenadas GPS (null até à aula de GPS, em que passam a ser preenchidas no registo)
+    // Coordenadas GPS
     val latitude: Double? = null,
     val longitude: Double? = null,
+
+    // Endereço textual obtido por geocodificação inversa
+    val address: String? = null,
 
     // Caminhos locais das imagens/vídeos anexados (o enunciado exige pelo menos um)
     val mediaPaths: List<String> = emptyList(),

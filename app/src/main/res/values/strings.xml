@@ -31,6 +31,8 @@
     <string name="field_category">Category</string>
     <string name="field_situation">Situation</string>
     <string name="field_scope">Scope</string>
+    <string name="field_address">Address / Location</string>
+    <string name="label_select_location">Select location on map:</string>
     <string name="action_save">Save</string>
     <string name="error_title_empty">Title cannot be empty</string>
     <string name="error_description_short">Description must have at least 10 characters</string>
