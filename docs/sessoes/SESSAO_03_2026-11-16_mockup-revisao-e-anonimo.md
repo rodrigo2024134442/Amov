@@ -11,7 +11,7 @@
 ## 1. Mockup (`cityfix_mockup_v2.html` → v3)
 
 - Revisto contra o enunciado: cobre os três perfis, o ciclo de vida, as notificações, as permissões, offline, EN/PT e portrait/landscape.
-- Corrigido na **v3** (`cityfix_mockup_v3.html`, fora do repositório):
+- Corrigido na **v3** (`docs/cityfix_mockup_v3.html`, abre no browser):
   - chat por ticket (antes todos os tickets mostravam a mesma conversa); o operador pode responder sem mudar o estado;
   - alerta da geofence só em "Em Resolução" e depois de o operador chegar a menos de 20 m;
   - uma mensagem do munícipe só passa o ticket a "Pedido de Informações" se estiver "Aberto";

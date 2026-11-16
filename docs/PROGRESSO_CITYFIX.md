@@ -21,6 +21,8 @@ Estado geral do trabalho prático de Arquiteturas Móveis 2026/27 (enunciado: `A
 
 > Atualizar esta caixa sempre que um passo muda de estado.
 
+> Mockup da interface (os três perfis, portrait/landscape, EN/PT): **`docs/cityfix_mockup_v3.html`** (abrir no browser).
+
 ### 🔔 Lembretes em aberto
 
 - [ ] **Publicar a regra do documento `stats/global`** nas regras do Firestore (ver sessão 03, secção 3) e entrar uma vez como operador para calcular os indicadores. Sem isto o dashboard mostra "—".
