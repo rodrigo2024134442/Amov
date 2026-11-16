@@ -3,6 +3,13 @@ package pt.isec.amov.cityfix.ui.navigation
 import kotlinx.serialization.Serializable
 
 /**
+ * Rota do dashboard (indicadores do município e ocorrências públicas recentes).
+ * É o ecrã inicial do munícipe anónimo.
+ */
+@Serializable
+data object DashboardRoute
+
+/**
  * Rota para o ecrã principal de listagem de incidentes.
  */
 @Serializable

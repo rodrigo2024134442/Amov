@@ -4,6 +4,7 @@ import android.content.Context
 import android.location.Address
 import android.location.Geocoder
 import android.os.Build
+import pt.isec.amov.cityfix.R
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Locale
 import kotlin.coroutines.resume
@@ -12,7 +13,7 @@ object LocationUtils {
     suspend fun reverseGeocode(context: Context, lat: Double, lng: Double): String =
         suspendCancellableCoroutine { continuation ->
             val geocoder = Geocoder(context, Locale.getDefault())
-            val defaultResult = "Lat: %.4f, Lng: %.4f".format(lat, lng)
+            val defaultResult = context.getString(R.string.label_lat_lng, lat, lng)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 geocoder.getFromLocation(lat, lng, 1, object : Geocoder.GeocodeListener {
                     override fun onGeocode(addresses: MutableList<Address>) {

@@ -10,27 +10,28 @@ Estado geral do trabalho prático de Arquiteturas Móveis 2026/27 (enunciado: `A
 
 | | |
 |---|---|
-| **Fase atual** | Secções 1 e 2 do guia feitas pelo Marco; projeto Firebase criado; a fazer o passo 3.a |
-| **Próximo passo** | 3.a Configurar o projeto na consola (registo da app, Blaze, Authentication, Firestore, Storage) |
-| **Última atualização** | 2026-11-07 |
+| **Fase atual** | Secções 1 a 4 do guia e Ficha 10 (mapas) feitas; **perfil anónimo completo** (sessão 03, falta publicar a regra `stats`) |
+| **Próximo passo** | Ciclo de vida do ticket do lado do operador (estados, pedir dados, iniciar, resolver com prova) e mensagens |
+| **Última atualização** | 2026-11-16 |
 | **Grupo** | Marco (2024114817) e Rodrigo (2024134442) |
-| **Repositório** | `rodrigo2024134442/Amov` (GitHub), branch `main` |
-| **Backend** | Firebase: projeto criado (2026-11-07), plano Blaze (decidido), resto do passo 3.a por fazer |
-| **Entrega** | **2026-11-22 às 23:59** (−5 % por hora de atraso) |
+| **Repositório** | `rodrigo2024134442/Amov` (GitHub, **público**), branch `main` |
+| **Backend** | Firebase em uso: Authentication, Firestore (offline), Storage (Blaze). Falta o FCM |
+| **Entrega** | **2026-11-22 às 23:59** (−5 % por hora de atraso). **Faltam 6 dias** |
 | **Defesa funcional** | 23 a 27 de novembro, nas aulas práticas, com os dois presentes |
 
 > Atualizar esta caixa sempre que um passo muda de estado.
 
 ### 🔔 Lembretes em aberto
 
-- [x] ~~O projeto provavelmente não compila (falta `kotlinx-serialization`)~~. Resolvido no commit `684dc05` do Rodrigo; o `origin/main` compila (confirmado na sessão 02).
-- [x] ~~A cópia local do Marco está 3 commits atrás do `origin/main`~~. Feito o pull (sessão 02).
-- [ ] Levar às aulas as dúvidas do `duvidas.txt` e as ambiguidades do enunciado (sessão 01, secção 4).
-- [x] ~~Decidir o plano Blaze~~. **Blaze**, para ter o Storage (sessão 02). O MFA fica gratuito (app autenticadora, TOTP).
-- [ ] Decidir como partilhar o `google-services.json` (no Git só se o repositório for privado). Ver o passo 3.a.
-- [ ] As regras do Firestore e do Storage em modo de teste **expiram**: pôr a data depois da defesa (passo 3.i), até serem trocadas pelas da secção 4 (passo 4.j).
-- [ ] Mostrar ao professor o 2.º fator com **app autenticadora (TOTP)** e confirmar que é aceite como MFA (se não, trocar por outro).
-- [ ] Instalar uma app autenticadora (Google ou Microsoft Authenticator) nos telemóveis dos dois, para os testes da secção 4.
+- [ ] **Publicar a regra do documento `stats/global`** nas regras do Firestore (ver sessão 03, secção 3) e entrar uma vez como operador para calcular os indicadores. Sem isto o dashboard mostra "—".
+- [ ] **Chave do Google Maps**: o `AndroidManifest.xml` tem `android:value=""`, por isso os mapas ficam cinzentos. O repositório é público: pôr a chave no `local.properties` (Secrets Gradle Plugin) e restringi-la à app na consola Google Cloud.
+- [ ] **Domínio dos operadores**: o guia e a sessão 02 decidiram `@cmcoimbra.pt`; o commit `256dcbd` mudou o `AppConfig` para `isec.pt` (os alunos também têm `@isec.pt`, por isso qualquer aluno ficaria operador). Decidir entre os dois e escrever a decisão no relatório.
+- [ ] Levar às aulas as dúvidas do `duvidas.txt` (respostas sugeridas na sessão 03, secção 5).
+- [ ] Mostrar ao professor o 2.º fator com **app autenticadora (TOTP)** e confirmar que é aceite como MFA.
+- [ ] As regras do Firestore e do Storage em modo de teste **expiram**: confirmar a data (depois da defesa) ou que já estão as regras por perfil (passo 4.j).
+- [ ] Decidir como partilhar o `google-services.json` (não está no Git, e o repositório é público: ótimo, mas tem de ir no ZIP de entrega).
+- [x] ~~Decidir o plano Blaze~~. **Blaze** (sessão 02).
+- [x] ~~O projeto não compila (falta `kotlinx-serialization`)~~. Resolvido no commit `684dc05`.
 
 > Quando um lembrete estiver resolvido, marcar `[x]` e escrever a decisão no registo da sessão em que foi tomada.
 
@@ -107,58 +108,48 @@ Estado geral do trabalho prático de Arquiteturas Móveis 2026/27 (enunciado: `A
 
 | Passo | O que se faz | Ficheiros | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|---|
-| 3.a | Consola: projeto, app Android, Blaze, Authentication (e-mail/password), Firestore, Storage, convidar o colega | `app/google-services.json` | 🟡 | Marco | 2026-11-07 | **Só uma pessoa.** Projeto já criado (3.a.1); falta o resto |
-| 3.b | Gradle: Firebase BoM, Firestore, Storage, WorkManager | `libs.versions.toml`, `build.gradle.kts` (Project e app) | ⬜ | | | |
-| 3.c | Modelo: `mediaUrls`, `thumbnailUrl` | `model/Incident.kt` | ⬜ | | | |
-| 3.d | Conversão para o Firestore | `data/IncidentMapper.kt` | ⬜ | | | |
-| 3.e | Repositório sobre o Firestore | `data/IncidentsRepository.kt` | ⬜ | | | |
-| 3.f | Compressão e envio em segundo plano | `utils/ImageUtils.kt`, `data/MediaUploadWorker.kt` | ⬜ | | | |
-| 3.g | ViewModels | `IncidentsViewModel.kt`, `EditIncidentViewModel.kt` | ⬜ | | | |
-| 3.h | Interface e Manifest | `IncidentCard.kt`, `ShowScreen.kt`, `MainActivity.kt`, `AndroidManifest.xml` | ⬜ | | | |
-| 3.i | Regras de segurança temporárias | (consola) | ⬜ | | | Data de expiração depois da defesa |
-| 3.j | Verificar a secção 3 | (nenhum) | ⬜ | | | Emulador com Google Play; testar offline |
+| 3.a a 3.j | Consola, Gradle, `IncidentMapper`, repositório no Firestore, `ImageUtils` e `MediaUploadWorker`, ViewModels, interface, regras temporárias, verificação | (ver guia) | ✅ | Marco | 2026-11-07 | Commit `b8c3f41`. Revisto na sessão 03: o `IncidentMapper` não gravava a `address` (corrigido) |
 
 ### Secção 4: Autenticação, perfis e categorias
 
 | Passo | O que se faz | Ficheiros | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|---|
-| 4.a | Gradle: `firebase-auth` e `zxing-core` (QR code) | `libs.versions.toml`, `app/build.gradle.kts` | ⬜ | | | |
-| 4.b | Modelo, validações e TOTP | `model/User.kt`, `Session.kt`, `AppConfig.kt`, `utils/Validators.kt`, `Totp.kt`, `QrCode.kt` | ⬜ | | | Operador = e-mail `@cmcoimbra.pt`; NIF = 9 dígitos |
-| 4.c | Repositórios | `data/UserMapper.kt`, `CategoryMapper.kt`, `AuthRepository.kt`, `CategoriesRepository.kt`, `IncidentsRepository.kt`, `CityFixApp.kt` | ⬜ | | | |
-| 4.d | ViewModels | `SessionViewModel`, `LoginViewModel`, `RegisterViewModel`, `OperatorViewModel`, `AuthViewModelFactories`, `IncidentsViewModel(+Factory)`, `EditIncidentViewModel(+Factory)` | ⬜ | | | |
-| 4.e | Textos | `strings.xml` (EN e PT) | ⬜ | | | |
-| 4.f | Rotas | `ui/navigation/Destinations.kt` | ⬜ | | | |
-| 4.g | Componentes da fotografia e ecrãs novos | `UserAvatar`, `PhotoSourceButtons`, `LoginScreen`, `RegisterScreen`, `SessionScreens`, `ProfileScreen`, `ValidateUsersScreen`, `CategoriesScreen` | ⬜ | | | Fotografia de perfil opcional |
-| 4.h | Barra de topo, lista e detalhe | `MainTopAppBar.kt`, `ListScreen.kt`, `ShowScreen.kt` | ⬜ | | | |
-| 4.i | MainActivity | `MainActivity.kt` | ⬜ | | | O Manifest não muda |
-| 4.j | Regras de segurança por perfil | (consola) | ⬜ | | | Substituem as do 3.i |
-| 4.k | Verificar a secção 4 | (nenhum) | ⬜ | | | **App não executada** (só compilada; o `Totp` passou nos testes da RFC 6238) |
+| 4.a a 4.k | Auth, TOTP, registo com NIF único, sessão, perfil, validação de munícipes, categorias, regras por perfil | (ver guia) | ✅ | Marco | 2026-11-07 | Commit `b8c3f41`. A app já corre com o projeto Firebase real (testado na sessão 03) |
+
+### Depois do guia
+
+| O quê | Ficheiros | Estado | Quem | Data | Notas |
+|---|---|---|---|---|---|
+| Ficha 10: escolher a localização no mapa, morada por geocodificação inversa, mapa no detalhe | `MapLocationPicker.kt`, `LocationUtils.kt`, `EditScreen.kt`, `ShowScreen.kt` | ✅ | Rodrigo | 2026-11-14 | Commit `256dcbd`. Falta a chave do Maps (lembretes) |
+| Perfil anónimo completo: 10 km, dashboard, lista e detalhe | ver sessão 03 | ✅ | Rodrigo (com o Claude) | 2026-11-16 | Aplicado e a correr no emulador; **ainda sem commit** |
 
 ---
 
 ## Requisitos do enunciado
 
+Estado confirmado pela leitura do código em 2026-11-16 (sessão 03).
+
 ### I.1 Munícipe anónimo (sem login, a menos de 10 km da Praça da República)
 
 | Req. | O que se faz | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|
-| A1 | Verificar a distância à Praça da República (10 km) | ⬜ | | | Exige permissão de localização |
-| A2 | Dashboard: tempo médio de reparação, nº total de ocorrências, % de ativas | ⬜ | | | |
-| A3 | Lista de ocorrências públicas ativas (categoria, situação, thumbnail) | ⬜ | | | Lista com miniatura: guia 1.h e 2.e; só públicas e não encerradas para o anónimo: guia 4.c |
-| A4 | Detalhe público: sem dados do autor nem coordenadas; imagens e vídeos; mapa com zoom afastado | ⬜ | | | |
+| A1 | Verificar a distância à Praça da República (10 km) | ✅ | Rodrigo | 2026-11-16 | `LocationRepository`, `GuestAreaViewModel`, `GuestAreaScreen`. Pede a permissão; bloqueia fora da área, sem permissão ou sem GPS |
+| A2 | Dashboard: tempo médio de reparação, nº total de ocorrências, % de ativas | 🟡 | Rodrigo | 2026-11-16 | Feito (`stats/global`, `DashboardScreen`). Falta publicar a regra. O tempo médio só aparece quando o operador resolver ocorrências (O-E3) |
+| A3 | Lista de ocorrências públicas ativas (categoria, situação, thumbnail) | ✅ | Rodrigo | 2026-11-16 | Só Aberto, Pedido de Informações e Em Resolução; situação sempre visível no cartão |
+| A4 | Detalhe público: sem dados do autor nem coordenadas; imagens e vídeos; mapa com zoom afastado | ✅ | Rodrigo | 2026-11-16 | "Autor oculto" e mapa da zona aproximada (~1 km, zoom 12, sem marcador). Vídeos: ver M-E1 |
 
 ### I.2 Munícipe registado
 
 | Req. | O que se faz | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|
-| M-A | Registo: nome, e-mail, telefone, NIF (único), localização, foto opcional, opção "Deteção de Impactos"; dados validados; fica pendente | ⬜ | | | Guia 4.b, 4.c, 4.g (com foto opcional; sem georreferenciação: GPS) |
-| M-B | Login com e-mail e password, MFA e recuperação por e-mail | ⬜ | | | Ver o lembrete do plano Blaze; Guia 4.b, 4.c (2.º fator = app autenticadora, TOTP) |
-| M-C | Editar perfil (sem alterar nome, NIF e localização) | ⬜ | | | Guia 4.g (`ProfileScreen`) |
-| M-D | Acesso às funcionalidades do anónimo | ⬜ | | | |
-| M-E1 | Abrir ocorrência: categoria ativa, situação, descrição, pelo menos 1 imagem ou vídeo, público ou privado | ⬜ | | | Guia 1.e, 1.h, 2.d, 2.g (só imagens, até 3) |
-| M-E2 | Lista das minhas ocorrências, com o estado | ⬜ | | | Guia 4.d (separador "As minhas") |
-| M-E3 | Detalhe, com mensagens trocadas com a câmara | ⬜ | | | |
-| M-E4 | Reabrir (até 5 dias depois de resolvida) | ⬜ | | | |
+| M-A | Registo: nome, e-mail, telefone, NIF (único), localização, foto opcional, opção "Deteção de Impactos"; dados validados; fica pendente | 🟡 | Marco | 2026-11-07 | **Falta a georreferenciação** (o operador vê "Localização por definir") |
+| M-B | Login com e-mail e password, MFA e recuperação por e-mail | ✅ | Marco | 2026-11-07 | 2.º fator = app autenticadora (TOTP). Limitação para o relatório: a passagem do 2.º fator só fica guardada no telemóvel |
+| M-C | Editar perfil (sem alterar nome, NIF e localização) | ✅ | Marco | 2026-11-07 | Telefone, deteção de impactos e fotografia |
+| M-D | Acesso às funcionalidades do anónimo | ✅ | Rodrigo | 2026-11-16 | Separador "Painel" e separador "Públicas" na lista |
+| M-E1 | Abrir ocorrência: categoria ativa, situação, descrição, pelo menos 1 imagem ou vídeo, público ou privado | 🟡 | Marco / Rodrigo | 2026-11-14 | Funciona com imagens (até 3) e localização no mapa. **Faltam os vídeos**. O autor pode editar e apagar em qualquer estado (devia ser só em "Aberto"; apagar quebra a rastreabilidade) |
+| M-E2 | Lista das minhas ocorrências, com o estado | ✅ | Marco | 2026-11-07 | Separador "As minhas" |
+| M-E3 | Detalhe, com mensagens trocadas com a câmara | 🟡 | | | Detalhe feito; **faltam as mensagens** (ex.: subcoleção `incidents/{id}/messages`) |
+| M-E4 | Reabrir (até 5 dias depois de resolvida) | ⬜ | | | Usar `StatsRepository.addReopened()` no mesmo batch |
 | M-F | Deteção de impactos (acelerómetro, eixo vertical) e sugestão de abrir ocorrência | ⬜ | | | |
 | M-G | Ocorrência de grupo: mesma categoria e situação, a menos de 10 m | ⬜ | | | |
 
@@ -166,22 +157,22 @@ Estado geral do trabalho prático de Arquiteturas Móveis 2026/27 (enunciado: `A
 
 | Req. | O que se faz | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|
-| O-A | Registo: e-mail do domínio da autarquia, NIF único, fica logo ativo | ⬜ | | | Guia 4.b: e-mail `@cmcoimbra.pt` = operador |
-| O-B | Login com MFA e recuperação por e-mail | ⬜ | | | Igual ao M-B; Guia 4.c |
-| O-C | Editar perfil (sem alterar nome e NIF) | ⬜ | | | Guia 4.g |
-| O-D | Validar o registo de munícipes (nome, localização, NIF) | ⬜ | | | Guia 4.g (`ValidateUsersScreen`) |
-| O-E1 | Gerir categorias: criar, editar, ativar e desativar | ⬜ | | | Guia 4.c, 4.g (`CategoriesScreen`) |
-| O-E2 | Painel com todas as ocorrências (coordenadas, contactos, histórico, fotos e vídeos) | ⬜ | | | |
-| O-E3 | Mudar o estado do ticket (com timestamp), pedir dados, iniciar trabalhos, carregar prova da conclusão | ⬜ | | | |
+| O-A | Registo: e-mail do domínio da autarquia, NIF único, fica logo ativo | 🟡 | Marco | 2026-11-07 | Funciona, mas ver o lembrete do domínio (`isec.pt` vs `cmcoimbra.pt`) |
+| O-B | Login com MFA e recuperação por e-mail | ✅ | Marco | 2026-11-07 | |
+| O-C | Editar perfil (sem alterar nome e NIF) | ✅ | Marco | 2026-11-07 | |
+| O-D | Validar o registo de munícipes (nome, localização, NIF) | 🟡 | Marco | 2026-11-07 | Ecrã feito; a localização fica vazia até o M-A a pedir |
+| O-E1 | Gerir categorias: criar, editar, ativar e desativar | ✅ | Marco | 2026-11-07 | |
+| O-E2 | Painel com todas as ocorrências (coordenadas, contactos, histórico, fotos e vídeos) | 🟡 | | | Vê todas, com mapa e coordenadas. **Faltam** os contactos do autor e o histórico |
+| O-E3 | Mudar o estado do ticket (com timestamp), pedir dados, iniciar trabalhos, carregar prova da conclusão | ⬜ | | | **Prioridade 1.** Ao resolver: preencher `resolvedAt` e chamar `StatsRepository.addResolved()` no mesmo batch |
 | O-F | Alerta aos autores quando o operador está a menos de 20 m de uma ocorrência ativa | ⬜ | | | Localização em segundo plano |
 
 ### II e III: Ciclo de vida do ticket e notificações
 
 | Req. | O que se faz | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|
-| T1 | Estados: Aberto → Pedido de Informações → Em Resolução → Resolvido → Encerrado | ⬜ | | | |
-| T2 | Fecho automático 5 dias depois de resolvido | ⬜ | | | |
-| N1 | Notificação em cada mudança de estado | ⬜ | | | |
+| T1 | Estados: Aberto → Pedido de Informações → Em Resolução → Resolvido → Encerrado | ⬜ | | | Os estados existem no modelo (`IncidentStatus`), mas nada os muda |
+| T2 | Fecho automático 5 dias depois de resolvido | ⬜ | | | Ex.: WorkManager periódico |
+| N1 | Notificação em cada mudança de estado | ⬜ | | | Alternativa sem servidor: notificações locais a partir dos snapshot listeners (justificar no relatório) |
 | N2 | Notificação de mensagens (pedidos de informação e respostas) | ⬜ | | | |
 | N3 | Alerta de proximidade da equipa (geofence de 20 m) | ⬜ | | | |
 | N4 | Aviso quando faltam 24 h para o fecho definitivo | ⬜ | | | |
@@ -190,24 +181,24 @@ Estado geral do trabalho prático de Arquiteturas Móveis 2026/27 (enunciado: `A
 
 | Req. | O que se faz | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|
-| F1 | Projeto Firebase e `google-services.json` | ⬜ | | | Guia 3.a |
-| F2 | Firebase Authentication (sessão guardada no dispositivo) | ⬜ | | | Guia 3.a.5, 4.c |
-| F3 | Cloud Firestore com persistência offline (ocorrências, categorias, mensagens) | ⬜ | | | Ocorrências: guia 3.d, 3.e |
-| F4 | Compressão de imagens e thumbnails antes do envio | ⬜ | | | Guia 3.f (`ImageUtils`) |
-| F5 | Envio de fotos e vídeos para o Firebase Storage pelo WorkManager, só com rede | ⬜ | | | Guia 3.f (`MediaUploadWorker`), só fotos |
+| F1 | Projeto Firebase e `google-services.json` | ✅ | Marco | 2026-11-07 | |
+| F2 | Firebase Authentication (sessão guardada no dispositivo) | ✅ | Marco | 2026-11-07 | |
+| F3 | Cloud Firestore com persistência offline (ocorrências, categorias, mensagens) | 🟡 | Marco | 2026-11-07 | Ocorrências, categorias, utilizadores e `stats`. Faltam as mensagens |
+| F4 | Compressão de imagens e thumbnails antes do envio | ✅ | Marco | 2026-11-07 | `ImageUtils` (1600 px e 320 px) |
+| F5 | Envio de fotos e vídeos para o Firebase Storage pelo WorkManager, só com rede | 🟡 | Marco | 2026-11-07 | Só fotos |
 | F6 | Firebase Cloud Messaging (push) | ⬜ | | | |
 
 ### V: Requisitos gerais
 
 | Req. | O que se faz | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|
-| G1 | Jetpack Compose | 🟡 | Rodrigo | 2026-10-25 | Navegação, lista e detalhe feitos (commits do Rodrigo) |
-| G2 | Arquitetura MVVM, composables stateless e stateful | 🟡 | Rodrigo | 2026-10-25 | Repositório, factories e ViewModel do formulário: guia secção 1 |
-| G3 | Permissões em tempo de execução: localização (primeiro e segundo plano), câmara, notificações | ⬜ | | | |
-| G4 | Inglês por omissão e português conforme o dispositivo | ⬜ | | | Guia 1.f |
-| G5 | Portrait e Landscape | ⬜ | | | |
-| G6 | Navegação; barras de topo e botões flutuantes conforme o contexto | ⬜ | | | |
-| G7 | Acessibilidade | ⬜ | | | |
+| G1 | Jetpack Compose | ✅ | Rodrigo / Marco | | |
+| G2 | Arquitetura MVVM, composables stateless e stateful | ✅ | Rodrigo / Marco | | Ecrãs stateless, estado nos ViewModels, factories |
+| G3 | Permissões em tempo de execução: localização (primeiro e segundo plano), câmara, notificações | 🟡 | Rodrigo | 2026-11-16 | Localização em primeiro plano (anónimo). Faltam segundo plano e notificações; a câmara usa o intent do sistema |
+| G4 | Inglês por omissão e português conforme o dispositivo | ✅ | | | Os nomes das categorias são dados (ficam como o operador os escreve) |
+| G5 | Portrait e Landscape | 🟡 | Rodrigo | 2026-11-16 | Barra lateral em landscape; falta testar todos os ecrãs |
+| G6 | Navegação; barras de topo e botões flutuantes conforme o contexto | ✅ | Rodrigo | 2026-11-16 | Barra Painel / Ocorrências; barra de topo e FAB mudam com o ecrã e o perfil |
+| G7 | Acessibilidade | 🟡 | | | `contentDescription` nos ícones, cartões dos KPIs lidos de uma vez. Falta rever com o TalkBack |
 
 ### VI: Entrega
 
@@ -216,3 +207,16 @@ Estado geral do trabalho prático de Arquiteturas Móveis 2026/27 (enunciado: `A
 | E1 | Relatório técnico em PDF (soluções técnicas, opções de implementação, melhorias) | ⬜ | | | |
 | E2 | ZIP `AMOV2627.2024114817.2024134442` sem `.gradle`, `build`, `app/build` e `local.properties` | ⬜ | | | Confirmar a ordem dos números |
 | E3 | Entrega no Nónio até 2026-11-22 às 23:59 | ⬜ | | | |
+
+---
+
+## Plano até à entrega (sugerido na sessão 03)
+
+| Dias | Pessoa A | Pessoa B |
+|---|---|---|
+| 17 a 18 nov | O-E3 e T1: estados com histórico e timestamp, pedir dados, iniciar, resolver com prova (foto/vídeo) | M-A: localização no registo; M-E1: vídeos e só editar em "Aberto" |
+| 19 nov | M-E3 e N2: mensagens; M-E4 e T2: reabrir e fecho automático | M-G: ocorrência de grupo (10 m); M-F: deteção de impactos |
+| 20 nov | N1, N3, N4: notificações (locais a partir dos listeners; FCM se houver tempo) | O-F: geofence de 20 m; G3: permissões em segundo plano e notificações |
+| 21 nov | Testes completos (portrait/landscape, PT/EN, offline) | Relatório (E1) |
+| 22 nov | ZIP sem `.gradle`, `build`, `app/build`, `local.properties` (E2) e entrega no Nónio (E3) | |
+

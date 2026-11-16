@@ -113,4 +113,34 @@
     <string name="error_login">Wrong e-mail or password</string>
     <string name="error_network">No internet connection</string>
     <string name="error_generic">Something went wrong. Try again.</string>
+
+    <!-- Perfil anónimo: dashboard e área de 10 km -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_incidents">Incidents</string>
+    <string name="dashboard_area">10 km radius · Praça da República</string>
+    <string name="kpi_avg_repair">Average repair time</string>
+    <string name="kpi_total">Total incidents</string>
+    <string name="kpi_active">Active</string>
+    <string name="kpi_days">%1$.1f days</string>
+    <string name="kpi_percent">%1$d%%</string>
+    <string name="kpi_unavailable" translatable="false">—</string>
+    <string name="dashboard_public_title">Active public incidents</string>
+    <string name="action_see_all">See all</string>
+    <string name="dashboard_privacy">Authors and exact locations are hidden in public incidents.</string>
+    <string name="area_checking">Checking your location…</string>
+    <string name="area_permission_title">Location needed</string>
+    <string name="area_permission_text">Without signing in, CityFix is only available within 10 km of Praça da República. Allow location access so we can confirm where you are.</string>
+    <string name="action_allow_location">Allow location</string>
+    <string name="action_open_settings">Open settings</string>
+    <string name="area_outside_title">Outside the service area</string>
+    <string name="area_outside_text">You are %1$.1f km from Praça da República. Without signing in, CityFix is only available within 10 km.</string>
+    <string name="area_unavailable_title">Location unavailable</string>
+    <string name="area_unavailable_text">We could not get your location. Check that location is turned on and try again.</string>
+    <string name="action_retry">Try again</string>
+    <string name="area_sign_in_hint">Registered users can use CityFix anywhere.</string>
+    <string name="label_address">Address: %1$s</string>
+    <string name="label_approximate_area">Approximate area</string>
+    <string name="author_hidden">Author hidden</string>
+    <string name="selected_location">Selected location</string>
+    <string name="label_lat_lng">Lat %1$.4f, Lng %2$.4f</string>
 </resources>

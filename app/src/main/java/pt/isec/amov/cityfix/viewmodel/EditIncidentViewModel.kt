@@ -164,7 +164,7 @@ class EditIncidentViewModel(
             resolvedAt = base?.resolvedAt,
             syncStatus = kept?.syncStatus ?: SyncStatus.PENDING_SYNC
         )
-        repository.saveIncident(incident)
+        repository.saveIncident(incident, isNew = base == null)
         saved = true
         if (mediaChanged) repository.scheduleMediaUpload(incident.id)
         _editState.update { it.copy(isSaving = false) }

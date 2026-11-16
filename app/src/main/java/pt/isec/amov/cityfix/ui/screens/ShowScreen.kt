@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PersonOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
@@ -34,6 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.google.maps.android.compose.Circle
+import com.google.maps.android.compose.MapUiSettings
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -49,12 +52,15 @@ import pt.isec.amov.cityfix.ui.components.label
  * Ecrã stateless que apresenta os detalhes completos de um incidente selecionado.
  * Inclui botões flutuantes para editar e apagar (com confirmação) a ocorrência, só para o autor.
  * As coordenadas e o mapa Google Maps só aparecem ao autor e ao operador (Ficha 10).
+ * Os outros (anónimo, enunciado I.1.C) veem só uma zona aproximada: mapa com zoom afastado,
+ * sem marcador, com as coordenadas arredondadas e sem poder aproximar.
  */
 @Composable
 fun ShowScreen(
     incident: Incident?,
     canEdit: Boolean,
     showLocation: Boolean,
+    showApproximateMap: Boolean,
     onEditClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -150,7 +156,7 @@ fun ShowScreen(
             if (showLocation) {
                 incident.address?.let { addr ->
                     Text(
-                        text = "Morada: $addr",
+                        text = stringResource(R.string.label_address, addr),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -183,7 +189,62 @@ fun ShowScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
+            } else if (showApproximateMap) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(Icons.Default.PersonOff, contentDescription = null)
+                    Text(stringResource(R.string.author_hidden), style = MaterialTheme.typography.bodyMedium)
+                }
+                if (incident.latitude != null && incident.longitude != null) {
+                    ApproximateAreaMap(incident.latitude, incident.longitude)
+                }
             }
         }
     }
 }
+
+/**
+ * Mapa da zona aproximada (enunciado I.1.C): centro arredondado a 2 casas decimais (~1 km),
+ * zoom afastado fixo, um círculo em vez do marcador e todos os gestos desligados.
+ */
+@Composable
+private fun ApproximateAreaMap(latitude: Double, longitude: Double) {
+    val center = remember(latitude, longitude) {
+        LatLng(Math.round(latitude * 100) / 100.0, Math.round(longitude * 100) / 100.0)
+    }
+    val fill = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    val stroke = MaterialTheme.colorScheme.primary
+    Text(stringResource(R.string.label_approximate_area), style = MaterialTheme.typography.labelMedium)
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clip(RoundedCornerShape(12.dp))
+    ) {
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = rememberCameraPositionState {
+                position = CameraPosition.fromLatLngZoom(center, APPROXIMATE_ZOOM)
+            },
+            uiSettings = MapUiSettings(
+                zoomControlsEnabled = false,
+                zoomGesturesEnabled = false,
+                scrollGesturesEnabled = false,
+                rotationGesturesEnabled = false,
+                tiltGesturesEnabled = false,
+                mapToolbarEnabled = false,
+                myLocationButtonEnabled = false
+            )
+        ) {
+            Circle(
+                center = center,
+                radius = APPROXIMATE_RADIUS_METERS,
+                fillColor = fill,
+                strokeColor = stroke,
+                strokeWidth = 2f
+            )
+        }
+    }
+}
+
+private const val APPROXIMATE_ZOOM = 12f
+private const val APPROXIMATE_RADIUS_METERS = 1000.0

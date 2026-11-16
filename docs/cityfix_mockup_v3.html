@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix — Android Jetpack Compose UI Mockup Showcase (v3)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .material-symbols-rounded {
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+      user-select: none;
+      vertical-align: middle;
+    }
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Rounded';
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      user-select: none;
+      vertical-align: middle;
+    }
+    .phone-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .phone-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .phone-scroll::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.25);
+      border-radius: 9999px;
+    }
+    .android-frame {
+      transition: all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow:
+        0 25px 50px -12px rgba(15, 23, 42, 0.28),
+        0 0 0 2px #334155,
+        0 0 0 6px #0f172a,
+        inset 0 0 0 2px #1e293b;
+    }
+    .portrait-size {
+      width: 380px;
+      height: 800px;
+      border-radius: 44px;
+    }
+    .landscape-size {
+      width: 800px;
+      height: 380px;
+      border-radius: 38px;
+    }
+    @media (max-width: 860px) {
+      .landscape-size {
+        width: 94vw;
+        height: 380px;
+      }
+      .portrait-size {
+        width: 355px;
+        height: 750px;
+      }
+    }
+    @keyframes radarPulse {
+      0% { transform: scale(0.85); opacity: 0.7; }
+      70% { transform: scale(1.45); opacity: 0; }
+      100% { transform: scale(1.45); opacity: 0; }
+    }
+    .radar-ring {
+      animation: radarPulse 2.4s infinite ease-out;
+    }
+    /* v3 accessibility: larger minimum text and touch targets inside the phone */
+    #app-shell .text-\[9px\] { font-size: 10px; }
+    #app-shell .text-\[10px\] { font-size: 11px; }
+    #app-shell button[aria-label] { min-width: 40px; min-height: 40px; }
+    #app-shell nav button { min-height: 48px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-100 text-slate-900">
+
+  <!-- Top Showcase Control Header -->
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 py-3 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand & Course Tag -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-sky-700 text-white flex items-center justify-center shadow-sm">
+          <span class="material-symbols-rounded text-2xl">location_city</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-slate-900 text-base sm:text-lg tracking-tight">CityFix</h1>
+            <span class="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">
+              Jetpack Compose • MD3
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 hidden sm:block">ISEC • Mobile Architectures (2026/27) — Interactive UI Prototype</p>
+        </div>
+      </div>
+
+      <!-- Role Switcher Tabs -->
+      <div class="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/80 overflow-x-auto max-w-full">
+        <button onclick="setRole('anonymous')" id="role-btn-anonymous"
+          class="role-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap">
+          <span class="material-symbols-rounded text-base">explore</span>
+          <span data-i18n="roleAnon">Anonymous Citizen</span>
+        </button>
+        <button onclick="setRole('registered')" id="role-btn-registered"
+          class="role-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap">
+          <span class="material-symbols-rounded text-base">person_check</span>
+          <span data-i18n="roleReg">Registered Citizen</span>
+        </button>
+        <button onclick="setRole('operator')" id="role-btn-operator"
+          class="role-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap">
+          <span class="material-symbols-rounded text-base">engineering</span>
+          <span data-i18n="roleOp">Municipal Operator</span>
+        </button>
+      </div>
+
+      <!-- Orientation & Language Toggles -->
+      <div class="flex items-center gap-2">
+        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200" title="Toggle Orientation">
+          <button onclick="setOrientation('portrait')" id="orient-portrait"
+            class="px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all">
+            <span class="material-symbols-rounded text-base">stay_current_portrait</span>
+            <span class="hidden md:inline">Portrait</span>
+          </button>
+          <button onclick="setOrientation('landscape')" id="orient-landscape"
+            class="px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all">
+            <span class="material-symbols-rounded text-base">stay_current_landscape</span>
+            <span class="hidden md:inline">Landscape</span>
+          </button>
+        </div>
+
+        <button onclick="toggleLanguage()"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors shadow-sm">
+          <span class="material-symbols-rounded text-base">translate</span>
+          <span id="lang-label">EN / PT</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- Left Panel: Screen Navigator & Requirement Spec Context -->
+    <aside class="lg:col-span-4 space-y-4">
+      <div class="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <span id="spec-badge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-sky-100 text-sky-800">
+            Profile 1
+          </span>
+          <span id="spec-constraint" class="text-xs font-medium text-slate-500 flex items-center gap-1">
+            <span class="material-symbols-rounded text-sm text-sky-600">my_location</span>
+            <span>10 km • Pr. República</span>
+          </span>
+        </div>
+        <h2 id="spec-title" class="text-lg font-bold text-slate-900">Anonymous Citizen</h2>
+        <p id="spec-desc" class="text-xs text-slate-600 mt-1 leading-relaxed">
+          Unauthenticated user restricted to a 10 km geofence around Praça da República. Can view municipal KPIs and privacy-masked public issues.
+        </p>
+
+        <div class="mt-4 pt-4 border-t border-slate-100">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2.5" data-i18n="availableScreens">
+            Available Screens in Profile
+          </p>
+          <div id="screen-selector-list" class="space-y-1.5"></div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-sm space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+          <span class="material-symbols-rounded text-base text-emerald-600">verified_user</span>
+          <span data-i18n="archTitle">Project Architecture & Rules</span>
+        </h3>
+        <div id="spec-checklist" class="space-y-2 text-xs text-slate-700"></div>
+
+        <div class="pt-3 border-t border-slate-100">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2" data-i18n="simTriggers">
+            Interactive Event Simulators
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="triggerImpactBanner()"
+              class="text-xs px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 font-medium flex items-center gap-1 transition">
+              <span class="material-symbols-rounded text-sm">vibration</span>
+              <span data-i18n="simImpact">Simulate Pothole Impact</span>
+            </button>
+            <button onclick="triggerGeofenceBanner()"
+              class="text-xs px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 font-medium flex items-center gap-1 transition">
+              <span class="material-symbols-rounded text-sm">radar</span>
+              <span data-i18n="simGeofence">Simulate 20m Truck Alert</span>
+            </button>
+            <button onclick="toggleOfflineMode()" id="offline-sim-btn"
+              class="text-xs px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 font-medium flex items-center gap-1 transition">
+              <span class="material-symbols-rounded text-sm">cloud_off</span>
+              <span data-i18n="simOffline">Toggle Offline Sync</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center/Right Stage: Realistic Android Device Frame -->
+    <section class="lg:col-span-8 flex flex-col items-center justify-center min-h-[620px]">
+      <div id="android-device" class="android-frame portrait-size bg-slate-950 p-2.5 relative flex flex-col select-none">
+        <div id="camera-cutout"
+          class="absolute z-30 bg-black rounded-full w-3.5 h-3.5 border border-slate-800 top-4 left-1/2 -translate-x-1/2 transition-all duration-300">
+        </div>
+        <div id="phone-viewport" class="w-full h-full bg-[#f6f8fc] rounded-[34px] overflow-hidden flex flex-col relative text-slate-900">
+          <div class="h-7 px-5 pt-1 flex items-center justify-between text-[11px] font-semibold text-slate-700 bg-transparent shrink-0 z-20">
+            <span>09:41</span>
+            <div class="flex items-center gap-1.5">
+              <span id="status-offline-icon" class="hidden text-amber-600 flex items-center">
+                <span class="material-symbols-rounded text-[14px]">cloud_off</span>
+              </span>
+              <span class="material-symbols-rounded text-[14px]">signal_cellular_alt</span>
+              <span class="material-symbols-rounded text-[14px]">wifi</span>
+              <span class="material-symbols-rounded text-[14px]">battery_full</span>
+            </div>
+          </div>
+
+          <div id="offline-banner" class="hidden mx-3 mb-1 px-3 py-1.5 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 text-[11px] font-medium flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-rounded text-sm text-amber-700">sync_problem</span>
+              <span data-i18n="offlineMsg">Offline Mode: Firestore cache & WorkManager queued</span>
+            </div>
+            <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 bg-amber-200/80 rounded">Local</span>
+          </div>
+
+          <div id="app-shell" class="flex-1 flex flex-col overflow-hidden relative"></div>
+
+          <div class="h-4 flex items-center justify-center shrink-0 bg-transparent">
+            <div class="w-28 h-1 rounded-full bg-slate-900/25"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500">
+        <span class="flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+          Material Design 3 (Material You)
+        </span>
+        <span>•</span>
+        <span id="viewport-label">380 × 800 dp (Portrait)</span>
+        <span>•</span>
+        <span id="active-lang-badge" class="font-semibold text-slate-700">Default Locale: English (EN)</span>
+      </div>
+    </section>
+  </main>
+
+  <div id="global-toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 max-w-sm">
+    <span class="material-symbols-rounded text-emerald-400 text-lg">check_circle</span>
+    <span id="global-toast-text">Action completed</span>
+  </div>
+
+  <script>
+    const state = {
+      role: 'anonymous',
+      screen: 'anon_dash',
+      orientation: 'portrait',
+      lang: 'en',
+      offline: false,
+      impactAlertVisible: false,
+      geofenceAlertVisible: false,
+      selectedIssueId: 'ISS-1042',
+      reopenedTicket: false,
+      newReportScope: 'Public',
+      newReportCategory: 'Roads',
+      newReportSituation: 'Damage',
+      newReportGroupMatch: true,
+      mfaEnabled: true,
+      impactSensorEnabled: true,
+      citizenApproved: false,
+      categories: [
+        { id: 'cat1', nameEn: 'Public Roads', namePt: 'Vias Públicas', icon: 'add_road', active: true, count: 64 },
+        { id: 'cat2', nameEn: 'Water Supply', namePt: 'Água', icon: 'water_drop', active: true, count: 31 },
+        { id: 'cat3', nameEn: 'Street Lighting', namePt: 'Iluminação', icon: 'lightbulb', active: true, count: 38 },
+        { id: 'cat4', nameEn: 'Sanitation & Waste', namePt: 'Saneamento', icon: 'delete_sweep', active: true, count: 15 },
+        { id: 'cat5', nameEn: 'Parks & Trees', namePt: 'Espaços Verdes', icon: 'park', active: false, count: 0 }
+      ],
+      chatMessages: [
+        { sender: 'citizen', time: '09:15', textEn: 'Water pipe leaking heavily near the crosswalk.', textPt: 'Rotura de água junto à passadeira.' },
+        { sender: 'operator', time: '09:42', textEn: 'Municipal Services: Can you confirm if water is affecting traffic lanes?', textPt: 'Serviços Camarários: Pode confirmar se a água afeta a faixa de rodagem?' },
+        { sender: 'citizen', time: '09:48', textEn: 'Yes, the right lane is flooded for ~8 meters.', textPt: 'Sim, a via da direita está alagada numa extensão de ~8 metros.' }
+      ],
+      operatorTicketStatus: 'In Progress'
+    };
+
+    const i18n = {
+      en: {
+        roleAnon: 'Anonymous Citizen',
+        roleReg: 'Registered Citizen',
+        roleOp: 'Municipal Operator',
+        availableScreens: 'Screens in this Profile',
+        archTitle: 'Spec Compliance & Rules',
+        simTriggers: 'Interactive Event Simulators',
+        simImpact: 'Pothole Impact Alert',
+        simGeofence: '20m Truck Geofence',
+        simOffline: 'Offline Cache Mode',
+        offlineMsg: 'Offline: Firestore cache active • WorkManager queued',
+        radiusBadge: '10 km radius • Pr. República',
+        kpiAvgTime: 'Avg. Repair',
+        kpiTotal: 'Total Issues',
+        kpiActive: 'Active',
+        publicFeedTitle: 'Active Public Issues',
+        privacyNotice: 'Personal data & exact GPS hidden for anonymous users',
+        zoomedOutMap: 'Approximate Zone (Zoomed-Out Map)',
+        mediaCarousel: 'Attachments (Compressed + Thumbnail)',
+        fabReport: 'Report Issue',
+        myIssues: 'My Issues',
+        newReport: 'New Occurrence',
+        impactTitle: 'Sudden Vertical Acceleration Detected!',
+        impactSub: 'Accelerometer spike suggests a road pothole at your location. Report now?',
+        impactAction: 'Quick Report',
+        groupBadge: 'Group Issue • 4 citizens within 10m',
+        geofenceTitle: 'Municipal Team Nearby (< 20m)!',
+        geofenceSub: 'Intervention vehicle #M-04 arrived at your issue location.',
+        reopenBtn: 'Reopen Ticket (4 days left)',
+        reopenedBadge: 'Reopened by Citizen',
+        chatPlaceholder: 'Message municipal services...',
+        profileTitle: 'Citizen Profile & Sensors',
+        lockedFields: 'Name, NIF & Home Geolocation are locked after registration',
+        opPanelTitle: 'Operational Command',
+        pendingCitizens: 'Pending NIF Validations',
+        categoriesMgr: 'Problem Typologies',
+        approveBtn: 'Validate NIF',
+        approvedBadge: 'Active Citizen',
+        navHome: 'Dashboard',
+        navFeed: 'Feed',
+        navDetail: 'Detail',
+        navTickets: 'My Tickets',
+        navReport: 'Report',
+        navChat: 'Ticket Chat',
+        navProfile: 'Profile',
+        navOps: 'Issues',
+        navAdmin: 'Validation'
+      },
+      pt: {
+        roleAnon: 'Munícipe Anónimo',
+        roleReg: 'Munícipe Registado',
+        roleOp: 'Operador Municipal',
+        availableScreens: 'Ecrãs deste Perfil',
+        archTitle: 'Requisitos & Regras de Negócio',
+        simTriggers: 'Simuladores de Eventos',
+        simImpact: 'Alerta de Impacto (Buraco)',
+        simGeofence: 'Geofence Viatura (20m)',
+        simOffline: 'Modo Offline (Cache)',
+        offlineMsg: 'Offline: Cache Firestore ativa • WorkManager em fila',
+        radiusBadge: 'Raio 10 km • Pr. República',
+        kpiAvgTime: 'Tempo Médio',
+        kpiTotal: 'Total Ocorr.',
+        kpiActive: 'Ativas',
+        publicFeedTitle: 'Ocorrências Públicas Ativas',
+        privacyNotice: 'Dados pessoais e GPS exato ocultos no perfil anónimo',
+        zoomedOutMap: 'Área Aproximada (Mapa com Zoom Afastado)',
+        mediaCarousel: 'Anexos (Comprimidos + Miniatura)',
+        fabReport: 'Reportar',
+        myIssues: 'Minhas Ocorrências',
+        newReport: 'Nova Ocorrência',
+        impactTitle: 'Aceleração Vertical Brusca Detetada!',
+        impactSub: 'Pico no acelerómetro sugere buraco no pavimento. Abrir ocorrência?',
+        impactAction: 'Reportar Já',
+        groupBadge: 'Ocorrência de Grupo • 4 munícipes a <10m',
+        geofenceTitle: 'Equipa Camarária na Área (< 20m)!',
+        geofenceSub: 'Viatura de intervenção #M-04 aproximou-se da ocorrência.',
+        reopenBtn: 'Reabrir Ticket (restam 4 dias)',
+        reopenedBadge: 'Reaberto pelo Munícipe',
+        chatPlaceholder: 'Mensagem para serviços camarários...',
+        profileTitle: 'Perfil & Sensores',
+        lockedFields: 'Nome, NIF e Georreferenciação bloqueados após registo',
+        opPanelTitle: 'Gestão Operacional',
+        pendingCitizens: 'Validação de NIF Pendente',
+        categoriesMgr: 'Tipologias de Problemas',
+        approveBtn: 'Validar NIF',
+        approvedBadge: 'Munícipe Ativo',
+        navHome: 'Painel',
+        navFeed: 'Lista',
+        navDetail: 'Detalhe',
+        navTickets: 'Ocorrências',
+        navReport: 'Reportar',
+        navChat: 'Mensagens',
+        navProfile: 'Perfil',
+        navOps: 'Gestão',
+        navAdmin: 'Validações'
+      }
+    };
+
+    const t = (key) => i18n[state.lang][key] || key;
+
+    const issuesData = [
+      {
+        id: 'ISS-1042',
+        catEn: 'Public Roads', catPt: 'Vias Públicas',
+        sitEn: 'Damage', sitPt: 'Dano',
+        titleEn: 'Deep pothole on Av. Sá da Bandeira',
+        titlePt: 'Buraco profundo na Av. Sá da Bandeira',
+        status: 'In Progress',
+        scope: 'Public',
+        groupCount: 4,
+        coords: '40.2115° N, 8.4292° W',
+        citizen: 'João Silva • +351 912 345 678',
+        timeAgo: '2h ago',
+        color: 'amber',
+        icon: 'add_road',
+        hasVideo: true
+      },
+      {
+        id: 'ISS-1039',
+        catEn: 'Water Supply', catPt: 'Água',
+        sitEn: 'Malfunction', sitPt: 'Avaria',
+        titleEn: 'Water main rupture near Praça da República',
+        titlePt: 'Rotura na conduta junto à Praça da República',
+        status: 'Resolved',
+        scope: 'Public',
+        groupCount: 1,
+        coords: '40.2098° N, 8.4210° W',
+        citizen: 'João Silva • +351 912 345 678',
+        timeAgo: '1d ago',
+        color: 'sky',
+        icon: 'water_drop',
+        hasVideo: false
+      },
+      {
+        id: 'ISS-1035',
+        catEn: 'Street Lighting', catPt: 'Iluminação',
+        sitEn: 'Destruction', sitPt: 'Destruição',
+        titleEn: 'Knocked-down street lamp post',
+        titlePt: 'Poste de iluminação pública derrubado',
+        status: 'Info Requested',
+        scope: 'Public',
+        groupCount: 2,
+        coords: '40.2141° N, 8.4315° W',
+        citizen: 'Rui Ferreira • +351 965 009 321',
+        timeAgo: '3d ago',
+        color: 'purple',
+        icon: 'lightbulb',
+        hasVideo: true
+      },
+      {
+        id: 'ISS-1031',
+        catEn: 'Sanitation & Waste', catPt: 'Saneamento',
+        sitEn: 'Theft', sitPt: 'Roubo',
+        titleEn: 'Missing metal storm drain grate',
+        titlePt: 'Furto de grelha metálica de sarjeta',
+        status: 'Open',
+        scope: 'Private',
+        groupCount: 1,
+        coords: '40.2072° N, 8.4255° W',
+        citizen: 'Ana Martins • +351 918 776 543',
+        timeAgo: '15m ago',
+        color: 'rose',
+        icon: 'delete_sweep',
+        hasVideo: false
+      }
+    ];
+
+    const roleConfigs = {
+      anonymous: {
+        badge: 'Profile 1 • Unauthenticated',
+        constraint: '10 km • Pr. República',
+        titleEn: 'Anonymous Citizen',
+        titlePt: 'Munícipe Anónimo',
+        descEn: 'Unauthenticated access restricted to a 10 km radius around Praça da República. Displays municipal KPIs and privacy-sanitized public occurrences.',
+        descPt: 'Acesso não autenticado restrito a um raio de 10 km com centro na Praça da República. Apresenta KPIs municipais e ocorrências públicas sem dados pessoais.',
+        screens: [
+          { id: 'anon_dash', labelEn: '1A. Municipal Dashboard & KPIs', labelPt: '1A. Dashboard & KPIs Municipais', icon: 'dashboard' },
+          { id: 'anon_list', labelEn: '1B. Public Issues Feed', labelPt: '1B. Listagem de Ocorrências Públicas', icon: 'format_list_bulleted' },
+          { id: 'anon_detail', labelEn: '1C. Public Issue Detail (Masked)', labelPt: '1C. Detalhe Público (Sem Dados Pessoais)', icon: 'visibility_off' }
+        ],
+        checklistEn: [
+          'Geofence validation: <= 10 km from Praça da República',
+          'KPI cards: Avg Repair Time (3.2d), Total (148), Active (24%)',
+          'List shows Category, Situation & compressed Thumbnail only',
+          'Detail hides author identity & exact GPS (zoomed-out map)'
+        ],
+        checklistPt: [
+          'Validação geográfica: <= 10 km da Praça da República',
+          'KPIs: Tempo Médio (3.2d), Total (148), Ativas (24%)',
+          'Listagem apenas com Categoria, Situação e Thumbnail',
+          'Detalhe oculta autor e GPS exato (mapa com zoom afastado)'
+        ]
+      },
+      registered: {
+        badge: 'Profile 2 • Authenticated (NIF Verified)',
+        constraint: 'Global Access + Sensors',
+        titleEn: 'Registered Citizen',
+        titlePt: 'Munícipe Registado',
+        descEn: 'Authenticated citizen with MFA, vertical accelerometer impact detection, group issue aggregation (10m radius), municipal chat, and 5-day ticket reopening.',
+        descPt: 'Munícipe autenticado com MFA, deteção de impactos no acelerómetro, agregação de ocorrências em grupo (10m), chat camarário e reabertura até 5 dias.',
+        screens: [
+          { id: 'reg_list', labelEn: '2A. My Issues & Impact Detection', labelPt: '2A. Minhas Ocorrências & Impactos', icon: 'format_list_bulleted' },
+          { id: 'reg_create', labelEn: '2B. Report Issue (+ Group Aggregation)', labelPt: '2B. Nova Ocorrência (+ Grupo 10m)', icon: 'add_circle' },
+          { id: 'reg_detail', labelEn: '2C. Ticket Lifecycle, 20m Geofence & Chat', labelPt: '2C. Ciclo de Vida, Geofence 20m & Chat', icon: 'forum' },
+          { id: 'reg_profile', labelEn: '2D. Profile, MFA & Locked NIF/GPS', labelPt: '2D. Perfil, MFA & NIF/GPS Bloqueados', icon: 'badge' }
+        ],
+        checklistEn: [
+          'Impact Detection: monitors Z-axis acceleration for potholes',
+          'Group Issue: auto-aggregates same typology within 10m radius',
+          '20m Geofence alert when municipal vehicle approaches',
+          '5-day reopen window after Resolved; locked after Closed'
+        ],
+        checklistPt: [
+          'Deteção de Impactos: monitoriza eixo vertical para buracos',
+          'Ocorrência de Grupo: agrega mesma tipologia num raio de 10m',
+          'Alerta Geofence 20m quando equipa camarária se aproxima',
+          'Reabertura até 5 dias após Resolvido; bloqueado após Encerrado'
+        ]
+      },
+      operator: {
+        badge: 'Profile 3 • Municipal Staff (@cm-coimbra.pt)',
+        constraint: 'Full Telemetry & Admin',
+        titleEn: 'Municipal Operator',
+        titlePt: 'Operador Municipal',
+        descEn: 'Municipal field & back-office operator with full GPS coordinates, citizen contacts, ticket state transitions with proof media, NIF approvals, and category toggles.',
+        descPt: 'Operador municipal com acesso a coordenadas exatas, contactos do munícipe, transição de estados com foto/vídeo comprovativo, aprovação de NIF e tipologias.',
+        screens: [
+          { id: 'op_panel', labelEn: '3A. Operational Panel & Lifecycle Control', labelPt: '3A. Painel Operacional & Estados', icon: 'tune' },
+          { id: 'op_admin', labelEn: '3B. Citizen NIF Approval & Categories', labelPt: '3B. Validação NIF & Tipologias', icon: 'admin_panel_settings' }
+        ],
+        checklistEn: [
+          'Full visibility: exact GPS pin, phone number & media history',
+          'State machine: Request Info -> In Progress -> Resolved (proof)',
+          'Triggers 20m proximity push notification to citizen authors',
+          'Validates pending citizen NIF registrations & active categories'
+        ],
+        checklistPt: [
+          'Visibilidade total: GPS exato, contacto e histórico multimédia',
+          'Transição de estados: Pedir Dados -> Em Resolução -> Resolvido',
+          'Dispara notificação de proximidade (20m) aos autores',
+          'Valida registos pendentes por NIF e tipologias elegíveis'
+        ]
+      }
+    };
+
+    function setRole(role) {
+      state.role = role;
+      state.screen = roleConfigs[role].screens[0].id;
+      renderAll();
+    }
+
+    function setScreen(screenId) {
+      state.screen = screenId;
+      renderAll();
+    }
+
+    function setOrientation(orient) {
+      state.orientation = orient;
+      const device = document.getElementById('android-device');
+      const cutout = document.getElementById('camera-cutout');
+      const vpLabel = document.getElementById('viewport-label');
+
+      if (orient === 'portrait') {
+        device.classList.remove('landscape-size');
+        device.classList.add('portrait-size');
+        cutout.className = 'absolute z-30 bg-black rounded-full w-3.5 h-3.5 border border-slate-800 top-4 left-1/2 -translate-x-1/2 transition-all duration-300';
+        vpLabel.textContent = '380 × 800 dp (Portrait)';
+      } else {
+        device.classList.remove('portrait-size');
+        device.classList.add('landscape-size');
+        cutout.className = 'absolute z-30 bg-black rounded-full w-3.5 h-3.5 border border-slate-800 left-4 top-1/2 -translate-y-1/2 transition-all duration-300';
+        vpLabel.textContent = '800 × 380 dp (Landscape)';
+      }
+      updateTopControls();
+      renderPhoneViewport();
+    }
+
+    function toggleLanguage() {
+      state.lang = state.lang === 'en' ? 'pt' : 'en';
+      document.getElementById('active-lang-badge').textContent =
+        state.lang === 'en' ? 'Default Locale: English (EN)' : 'Idioma Ativo: Português (PT)';
+      renderAll();
+      showToast(state.lang === 'en' ? 'Language switched to English (Default)' : 'Idioma alterado para Português');
+    }
+
+    function toggleOfflineMode() {
+      state.offline = !state.offline;
+      const banner = document.getElementById('offline-banner');
+      const icon = document.getElementById('status-offline-icon');
+      const btn = document.getElementById('offline-sim-btn');
+
+      if (state.offline) {
+        banner.classList.remove('hidden');
+        icon.classList.remove('hidden');
+        btn.classList.add('bg-amber-100', 'text-amber-900', 'border-amber-300');
+        showToast(state.lang === 'en' ? 'Offline Mode: Firestore local cache active' : 'Modo Offline: Cache local Firestore ativa');
+      } else {
+        banner.classList.add('hidden');
+        icon.classList.add('hidden');
+        btn.classList.remove('bg-amber-100', 'text-amber-900', 'border-amber-300');
+        showToast(state.lang === 'en' ? 'Online: WorkManager synced queued media' : 'Online: WorkManager sincronizou anexos');
+      }
+    }
+
+    function triggerImpactBanner() {
+      state.role = 'registered';
+      state.screen = 'reg_list';
+      state.impactAlertVisible = true;
+      renderAll();
+      showToast(state.lang === 'en' ? 'Accelerometer Z-axis spike simulated!' : 'Pico no eixo vertical do acelerómetro simulado!');
+    }
+
+    function triggerGeofenceBanner() {
+      state.role = 'registered';
+      state.screen = 'reg_detail';
+      state.geofenceAlertVisible = true;
+      renderAll();
+      showToast(state.lang === 'en' ? 'Geofence <20m notification triggered!' : 'Notificação Geofence <20m disparada!');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('global-toast');
+      document.getElementById('global-toast-text').textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2800);
+    }
+
+    function updateTopControls() {
+      ['anonymous', 'registered', 'operator'].forEach(r => {
+        const btn = document.getElementById(`role-btn-${r}`);
+        if (state.role === r) {
+          btn.className = 'role-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap bg-sky-700 text-white shadow-sm';
+        } else {
+          btn.className = 'role-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-white/60';
+        }
+      });
+
+      const pBtn = document.getElementById('orient-portrait');
+      const lBtn = document.getElementById('orient-landscape');
+      if (state.orientation === 'portrait') {
+        pBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 bg-white text-slate-900 shadow-sm';
+        lBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 text-slate-500 hover:text-slate-800';
+      } else {
+        lBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 bg-white text-slate-900 shadow-sm';
+        pBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 text-slate-500 hover:text-slate-800';
+      }
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        el.textContent = t(key);
+      });
+    }
+
+    function renderSidebar() {
+      const cfg = roleConfigs[state.role];
+      document.getElementById('spec-badge').textContent = cfg.badge;
+      document.getElementById('spec-constraint').innerHTML = `
+        <span class="material-symbols-rounded text-sm text-sky-600">my_location</span>
+        <span>${cfg.constraint}</span>
+      `;
+      document.getElementById('spec-title').textContent = state.lang === 'en' ? cfg.titleEn : cfg.titlePt;
+      document.getElementById('spec-desc').textContent = state.lang === 'en' ? cfg.descEn : cfg.descPt;
+
+      const listEl = document.getElementById('screen-selector-list');
+      listEl.innerHTML = cfg.screens.map(s => {
+        const active = state.screen === s.id;
+        return `
+          <button onclick="setScreen('${s.id}')"
+            class="w-full text-left px-3 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all ${
+              active
+                ? 'bg-sky-50 text-sky-900 border border-sky-200 shadow-xs'
+                : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-transparent'
+            }">
+            <span class="flex items-center gap-2">
+              <span class="material-symbols-rounded text-base ${active ? 'text-sky-700' : 'text-slate-400'}">${s.icon}</span>
+              <span>${state.lang === 'en' ? s.labelEn : s.labelPt}</span>
+            </span>
+            ${active ? '<span class="w-2 h-2 rounded-full bg-sky-600"></span>' : ''}
+          </button>
+        `;
+      }).join('');
+
+      const checks = state.lang === 'en' ? cfg.checklistEn : cfg.checklistPt;
+      document.getElementById('spec-checklist').innerHTML = checks.map(item => `
+        <div class="flex items-start gap-2">
+          <span class="material-symbols-rounded text-sm text-emerald-600 mt-0.5 shrink-0">check_circle</span>
+          <span class="leading-snug">${item}</span>
+        </div>
+      `).join('');
+    }
+
+    function getStatusBadge(status) {
+      const map = {
+        'Open': { bg: 'bg-sky-100 text-sky-800 border-sky-200', pt: 'Aberto' },
+        'Info Requested': { bg: 'bg-amber-100 text-amber-900 border-amber-200', pt: 'Pedido Info' },
+        'In Progress': { bg: 'bg-indigo-100 text-indigo-800 border-indigo-200', pt: 'Em Resolução' },
+        'Resolved': { bg: 'bg-emerald-100 text-emerald-900 border-emerald-200', pt: 'Resolvido' },
+        'Closed': { bg: 'bg-slate-200 text-slate-700 border-slate-300', pt: 'Encerrado' }
+      };
+      const entry = map[status] || map['Open'];
+      const label = state.lang === 'en' ? status : entry.pt;
+      return `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${entry.bg} whitespace-nowrap">${label}</span>`;
+    }
+
+    function renderNavigationChrome(mainContentHtml, fabHtml = '') {
+      const navItemsByRole = {
+        anonymous: [
+          { id: 'anon_dash', icon: 'dashboard', label: t('navHome') },
+          { id: 'anon_list', icon: 'format_list_bulleted', label: t('navFeed') },
+          { id: 'anon_detail', icon: 'visibility_off', label: t('navDetail') }
+        ],
+        registered: [
+          { id: 'reg_list', icon: 'format_list_bulleted', label: t('navTickets') },
+          { id: 'reg_create', icon: 'add_circle', label: t('navReport') },
+          { id: 'reg_detail', icon: 'forum', label: t('navChat') },
+          { id: 'reg_profile', icon: 'person', label: t('navProfile') }
+        ],
+        operator: [
+          { id: 'op_panel', icon: 'engineering', label: t('navOps') },
+          { id: 'op_admin', icon: 'verified_user', label: t('navAdmin') }
+        ]
+      };
+
+      const items = navItemsByRole[state.role];
+
+      if (state.orientation === 'portrait') {
+        return `
+          <div class="flex-1 overflow-y-auto phone-scroll px-3.5 pb-20 space-y-3">
+            ${mainContentHtml}
+          </div>
+          ${fabHtml}
+          <nav class="h-16 bg-[#eef2f9] border-t border-slate-200/80 px-2 flex items-center justify-around shrink-0">
+            ${items.map(item => {
+              const active = state.screen === item.id;
+              return `
+                <button onclick="setScreen('${item.id}')" class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 group">
+                  <div class="px-4 py-1 rounded-full transition-all ${active ? 'bg-sky-200/90 text-sky-950' : 'text-slate-600 group-hover:bg-slate-200/50'}">
+                    <span class="material-symbols-rounded text-[20px]">${item.icon}</span>
+                  </div>
+                  <span class="text-[10px] font-semibold ${active ? 'text-slate-900' : 'text-slate-500'}">${item.label}</span>
+                </button>
+              `;
+            }).join('')}
+          </nav>
+        `;
+      } else {
+        return `
+          <div class="flex-1 flex overflow-hidden">
+            <nav class="w-20 bg-[#eef2f9] border-r border-slate-200/80 py-2 flex flex-col items-center justify-center gap-2 shrink-0">
+              ${items.map(item => {
+                const active = state.screen === item.id;
+                return `
+                  <button onclick="setScreen('${item.id}')" class="flex flex-col items-center gap-0.5 w-full py-1">
+                    <div class="px-3.5 py-1 rounded-full transition-all ${active ? 'bg-sky-200/90 text-sky-950' : 'text-slate-600'}">
+                      <span class="material-symbols-rounded text-[19px]">${item.icon}</span>
+                    </div>
+                    <span class="text-[9px] font-semibold ${active ? 'text-slate-900' : 'text-slate-500'}">${item.label}</span>
+                  </button>
+                `;
+              }).join('')}
+            </nav>
+            <div class="flex-1 overflow-y-auto phone-scroll p-3.5 relative">
+              ${mainContentHtml}
+            </div>
+            ${fabHtml}
+          </div>
+        `;
+      }
+    }
+
+    // SCREEN 1A: ANONYMOUS DASHBOARD
+    function renderAnonDashboard() {
+      const topBar = `
+        <div class="flex items-center justify-between pt-1">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-lg text-slate-900 tracking-tight">CityFix</span>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">${state.role==='anonymous'?L('Guest','Visitante'):L('Citizen','Munícipe')}</span>
+            </div>
+            <div class="flex items-center gap-1 text-[11px] text-sky-700 font-medium mt-0.5">
+              <span class="material-symbols-rounded text-[14px]">my_location</span>
+              <span>${t('radiusBadge')}</span>
+            </div>
+          </div>
+          ${topAction()}
+        </div>
+      `;
+
+      const kpiCards = `
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-white p-2.5 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-1">
+              <span class="material-symbols-rounded text-sm">timer</span>
+            </div>
+            <div class="text-base font-bold text-slate-900">3.2d</div>
+            <div class="text-[10px] text-slate-500 font-medium leading-tight">${t('kpiAvgTime')}</div>
+          </div>
+          <div class="bg-white p-2.5 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <div class="w-6 h-6 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center mb-1">
+              <span class="material-symbols-rounded text-sm">analytics</span>
+            </div>
+            <div class="text-base font-bold text-slate-900">148</div>
+            <div class="text-[10px] text-slate-500 font-medium leading-tight">${t('kpiTotal')}</div>
+          </div>
+          <div class="bg-white p-2.5 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center mb-1">
+              <span class="material-symbols-rounded text-sm">pending_actions</span>
+            </div>
+            <div class="text-base font-bold text-slate-900">24%</div>
+            <div class="text-[10px] text-slate-500 font-medium leading-tight">${t('kpiActive')}</div>
+          </div>
+        </div>
+      `;
+
+      const publicIssues = issuesData.filter(i => i.scope === 'Public' && !['Resolved','Closed'].includes(i.status)).slice(0, 2).map(issue => `
+        <div onclick="state.selectedIssueId='${issue.id}'; setScreen('anon_detail')"
+          class="bg-white p-2.5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3 cursor-pointer hover:border-sky-300 transition active:scale-[0.99]">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 flex flex-col items-center justify-center shrink-0 relative overflow-hidden">
+            <span class="material-symbols-rounded text-xl text-slate-600">${issue.icon}</span>
+            <span class="text-[7px] font-bold uppercase tracking-wider bg-black/60 text-white px-1 rounded absolute bottom-0.5">THUMB</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-sky-700">
+                ${state.lang === 'en' ? issue.catEn : issue.catPt}
+              </span>
+              ${getStatusBadge(issue.status)}
+            </div>
+            <p class="text-xs font-semibold text-slate-900 truncate mt-0.5">
+              ${state.lang === 'en' ? issue.titleEn : issue.titlePt}
+            </p>
+          </div>
+          <span class="material-symbols-rounded text-slate-400 text-lg">chevron_right</span>
+        </div>
+      `).join('');
+
+      return renderNavigationChrome(`
+        ${topBar}
+        ${kpiCards}
+        <div class="flex items-center justify-between pt-1">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">${t('publicFeedTitle')}</h2>
+          <button onclick="setScreen('anon_list')" class="text-[11px] font-semibold text-sky-700 hover:underline">
+            ${state.lang === 'en' ? 'View all →' : 'Ver todos →'}
+          </button>
+        </div>
+        <div class="space-y-2">
+          ${publicIssues}
+        </div>
+        <div class="p-2.5 rounded-2xl bg-slate-100 border border-slate-200 text-[10px] text-slate-600 flex items-center gap-2">
+          <span class="material-symbols-rounded text-sm text-slate-500">shield</span>
+          <span>${t('privacyNotice')}</span>
+        </div>
+      `);
+    }
+
+    // SCREEN 1B: ANONYMOUS LIST OF PUBLIC ISSUES
+    function renderAnonList() {
+      const publicIssues = issuesData.filter(i => i.scope === 'Public' && !['Resolved','Closed'].includes(i.status)).map(issue => `
+        <div onclick="state.selectedIssueId='${issue.id}'; setScreen('anon_detail')"
+          class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3 cursor-pointer hover:border-sky-300 transition">
+          <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 flex flex-col items-center justify-center shrink-0 relative overflow-hidden">
+            <span class="material-symbols-rounded text-2xl text-slate-600">${issue.icon}</span>
+            <span class="text-[8px] font-bold uppercase tracking-wider bg-black/60 text-white px-1 rounded absolute bottom-1">THUMB</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-sky-700">
+                ${state.lang === 'en' ? issue.catEn : issue.catPt}
+              </span>
+              ${getStatusBadge(issue.status)}
+            </div>
+            <p class="text-xs font-semibold text-slate-900 truncate mt-0.5">
+              ${state.lang === 'en' ? issue.titleEn : issue.titlePt}
+            </p>
+            <div class="flex items-center gap-2 mt-1 text-[10px] text-slate-500">
+              <span class="px-1.5 py-0.5 rounded bg-slate-100 font-medium text-slate-700">
+                ${state.lang === 'en' ? issue.sitEn : issue.sitPt}
+              </span>
+              <span>•</span>
+              <span>${issue.timeAgo}</span>
+            </div>
+          </div>
+          <span class="material-symbols-rounded text-slate-400 text-lg">chevron_right</span>
+        </div>
+      `).join('');
+
+      return renderNavigationChrome(`
+        <div class="flex items-center justify-between pt-1">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">${t('publicFeedTitle')}</h2>
+            <p class="text-[10px] text-slate-500">${t('radiusBadge')}</p>
+          </div>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800">${issuesData.filter(i => i.scope === 'Public' && !['Resolved','Closed'].includes(i.status)).length} ${L('public','públicas')}</span>
+        </div>
+        <div class="space-y-2.5">
+          ${publicIssues}
+        </div>
+        <div class="p-2.5 rounded-2xl bg-sky-50 border border-sky-200 text-[10px] text-sky-900 flex items-center gap-2">
+          <span class="material-symbols-rounded text-sm text-sky-700">visibility_off</span>
+          <span>${t('privacyNotice')}</span>
+        </div>
+      `);
+    }
+
+    // SCREEN 1C: ANONYMOUS DETAIL (PRIVACY MASKED)
+    function renderAnonDetail() {
+      const issue = issuesData.find(i => i.id === state.selectedIssueId) || issuesData[0];
+
+      return renderNavigationChrome(`
+        <div class="flex items-center gap-2 pt-1">
+          <button aria-label="Back" onclick="setScreen('anon_list')" class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center">
+            <span class="material-symbols-rounded text-lg">arrow_back</span>
+          </button>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-bold text-slate-900 truncate">${issue.id} • ${state.lang === 'en' ? issue.catEn : issue.catPt}</div>
+            <div class="text-[10px] text-slate-500">${t('privacyNotice')}</div>
+          </div>
+          ${getStatusBadge(issue.status)}
+        </div>
+
+        <div class="${state.orientation === 'landscape' ? 'grid grid-cols-2 gap-3 mt-2' : 'space-y-3'}">
+          <div class="bg-white rounded-3xl p-3 border border-slate-200/80 shadow-2xs space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-slate-700">${t('mediaCarousel')}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">1 / 2</span>
+            </div>
+            <div class="h-36 rounded-2xl bg-gradient-to-tr from-slate-800 via-slate-700 to-sky-900 relative flex flex-col items-center justify-center text-white overflow-hidden">
+              <span class="material-symbols-rounded text-4xl text-sky-300 mb-1">${issue.icon}</span>
+              <span class="text-xs font-semibold">${state.lang === 'en' ? issue.titleEn : issue.titlePt}</span>
+              <div class="absolute bottom-2 left-2 flex gap-1.5">
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs flex items-center gap-1">
+                  <span class="material-symbols-rounded text-xs">photo_camera</span> JPG (180 KB)
+                </span>
+                ${issue.hasVideo ? `
+                  <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-sky-600/90 flex items-center gap-1">
+                    <span class="material-symbols-rounded text-xs">videocam</span> MP4 (0:08)
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-[11px] pt-1">
+              <span class="text-slate-500">${state.lang === 'en' ? 'Situation:' : 'Situação:'} <strong class="text-slate-800">${state.lang === 'en' ? issue.sitEn : issue.sitPt}</strong></span>
+              <span class="text-slate-400 flex items-center gap-1">
+                <span class="material-symbols-rounded text-xs">person_off</span>
+                ${state.lang === 'en' ? 'Author Hidden' : 'Autor Oculto'}
+              </span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-3 border border-slate-200/80 shadow-2xs space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-slate-700">${t('zoomedOutMap')}</span>
+              <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                ${L('Zoomed out • no pin','Zoom afastado • sem pin')}
+              </span>
+            </div>
+            <div class="h-36 rounded-2xl bg-[#e6eef8] relative overflow-hidden border border-slate-200 flex items-center justify-center">
+              <svg class="absolute inset-0 w-full h-full opacity-55" viewBox="0 0 300 150">
+                <path d="M0,110 Q90,95 160,120 T300,105 L300,150 L0,150 Z" fill="#93c5fd" />
+                <line x1="20" y1="0" x2="80" y2="150" stroke="#cbd5e1" stroke-width="3" />
+                <line x1="140" y1="0" x2="120" y2="150" stroke="#cbd5e1" stroke-width="4" />
+                <line x1="0" y1="55" x2="300" y2="45" stroke="#cbd5e1" stroke-width="3" />
+                <line x1="0" y1="85" x2="300" y2="90" stroke="#cbd5e1" stroke-width="2" />
+              </svg>
+              <div class="w-24 h-24 rounded-full bg-sky-500/20 border-2 border-dashed border-sky-600 flex items-center justify-center z-10">
+                <span class="text-[10px] font-bold text-sky-900 bg-white/90 px-2 py-0.5 rounded-full shadow-2xs">
+                  Coimbra Centro
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+
+    // SCREEN 2A: REGISTERED CITIZEN - MY ISSUES & IMPACT DETECTION
+    function renderRegList() {
+      const impactBanner = state.impactAlertVisible ? `
+        <div class="p-3 rounded-2xl bg-amber-50 border border-amber-300 shadow-xs space-y-2">
+          <div class="flex items-start gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0">
+              <span class="material-symbols-rounded text-lg">vibration</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-950">${t('impactTitle')}</span>
+                <button aria-label="Dismiss" onclick="state.impactAlertVisible=false; renderPhoneViewport()" class="text-amber-700 hover:text-amber-950">
+                  <span class="material-symbols-rounded text-sm">close</span>
+                </button>
+              </div>
+              <p class="text-[11px] text-amber-900 leading-snug mt-0.5">${t('impactSub')}</p>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button onclick="quickReport()"
+              class="px-3 py-1 rounded-xl bg-amber-600 text-white text-[11px] font-semibold hover:bg-amber-700 transition">
+              ${t('impactAction')}
+            </button>
+          </div>
+        </div>
+      ` : '';
+
+      const cards = issuesData.filter(i => state.user && (i.owner === state.user.email || (i.followers||[]).includes(state.user.email))).map(issue => `
+        <div onclick="state.selectedIssueId='${issue.id}'; setScreen('reg_detail')"
+          class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs space-y-2 cursor-pointer hover:border-sky-300 transition">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-slate-900">${issue.id}</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">
+                ${state.lang === 'en' ? issue.catEn : issue.catPt}
+              </span>
+              ${issue.scope === 'Private' ? '<span class="material-symbols-rounded text-xs text-slate-400" title="Private">lock</span>' : ''}
+              ${state.user && issue.owner !== state.user.email ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold">${L('Following','A acompanhar')}</span>` : ''}
+            </div>
+            ${getStatusBadge(issue.status)}
+          </div>
+          <p class="text-xs font-semibold text-slate-800">${state.lang === 'en' ? issue.titleEn : issue.titlePt}</p>
+          <div class="flex items-center justify-between text-[10px] text-slate-500">
+            <span>${issue.coords}</span>
+            ${issue.groupCount > 1 ? `
+              <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+                ${state.lang === 'en' ? `Group • ${issue.groupCount} citizens` : `Grupo • ${issue.groupCount} munícipes`}
+              </span>
+            ` : `<span>${issue.timeAgo}</span>`}
+          </div>
+        </div>
+      `).join('');
+
+      const fab = `
+        <button onclick="setScreen('reg_create')"
+          class="absolute ${state.orientation === 'portrait' ? 'bottom-20 right-4' : 'bottom-4 right-4'} z-20 flex items-center gap-2 px-4 py-3 rounded-2xl bg-sky-700 text-white font-semibold text-xs shadow-lg hover:bg-sky-800 active:scale-95 transition">
+          <span class="material-symbols-rounded text-lg">add</span>
+          <span>${t('fabReport')}</span>
+        </button>
+      `;
+
+      return renderNavigationChrome(`
+        <div class="flex items-center justify-between pt-1">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">${t('myIssues')}</h2>
+            <p class="text-[11px] text-slate-500">${esc(state.user ? state.user.name : '')} • NIF ${state.user ? state.user.nif.slice(0,3) + '***' + state.user.nif.slice(6) : ''}</p>
+          </div>
+          ${state.user && state.user.impact
+            ? `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">${L('Sensor active','Sensor ativo')}</span>`
+            : `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-200 text-slate-600">${L('Sensor off','Sensor desligado')}</span>`}
+        </div>
+        ${impactBanner}
+        <div class="${state.orientation === 'landscape' ? 'grid grid-cols-2 gap-2.5' : 'space-y-2.5'}">
+          ${cards}
+        </div>
+      `, fab);
+    }
+
+    // SCREEN 2B: CREATE REPORT
+    function renderRegCreate() {
+      const groupAlert = state.newReportGroupMatch ? `
+        <div class="p-2.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-950 flex items-center gap-2.5">
+          <span class="material-symbols-rounded text-lg text-indigo-600 shrink-0">groups</span>
+          <div class="text-[11px] leading-snug">
+            <div class="font-bold">${t('groupBadge')}</div>
+            <div class="text-indigo-700">${state.lang === 'en' ? 'Similar report detected 6m away. Your report will be aggregated.' : 'Ocorrência idêntica a 6m. Será agregada em grupo.'}</div>
+          </div>
+        </div>
+      ` : '';
+
+      return renderNavigationChrome(`
+        <div class="flex items-center justify-between pt-1">
+          <h2 class="text-base font-bold text-slate-900">${t('newReport')}</h2>
+          <span class="text-[10px] font-mono-code bg-slate-200/80 px-2 py-0.5 rounded text-slate-700">GPS: 40.2115, -8.4292</span>
+        </div>
+
+        ${groupAlert}
+
+        <div class="${state.orientation === 'landscape' ? 'grid grid-cols-2 gap-3' : 'space-y-3'}">
+          <div class="bg-white p-3 rounded-2xl border border-slate-200/80 space-y-2.5">
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                ${state.lang === 'en' ? 'Category (Active Municipal)' : 'Categoria (Ativas no Município)'}
+              </label>
+              <div class="grid grid-cols-2 gap-1.5">
+                ${['Roads', 'Water', 'Lighting', 'Sanitation'].map(cat => `
+                  <button onclick="state.newReportCategory='${cat}'; renderPhoneViewport()"
+                    class="px-2.5 py-1.5 rounded-xl text-[11px] font-semibold border text-left transition ${
+                      state.newReportCategory === cat
+                        ? 'bg-sky-700 text-white border-sky-700'
+                        : 'bg-slate-50 text-slate-700 border-slate-200'
+                    }">
+                    ${cat}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                ${state.lang === 'en' ? 'Situation' : 'Situação'}
+              </label>
+              <div class="flex flex-wrap gap-1.5">
+                ${['Damage', 'Malfunction', 'Destruction', 'Theft'].map(sit => `
+                  <button onclick="state.newReportSituation='${sit}'; renderPhoneViewport()"
+                    class="px-2.5 py-1 rounded-full text-[11px] font-semibold border transition ${
+                      state.newReportSituation === sit
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-600 border-slate-200'
+                    }">
+                    ${sit}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] font-semibold text-slate-700">${state.lang === 'en' ? 'Visibility Scope' : 'Alcance'}</span>
+              <div class="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                ${['Public', 'Private'].map(sc => `
+                  <button onclick="state.newReportScope='${sc}'; renderPhoneViewport()"
+                    class="px-3 py-1 rounded-lg text-[11px] font-semibold transition ${
+                      state.newReportScope === sc ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500'
+                    }">
+                    ${sc}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-3 rounded-2xl border border-slate-200/80 space-y-2.5 flex flex-col justify-between">
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                ${state.lang === 'en' ? 'Description & Mandatory Media' : 'Descrição & Multimédia Obrigatória'}
+              </label>
+              <textarea rows="2" class="w-full text-xs p-2 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-sky-600"
+                placeholder="${state.lang === 'en' ? 'Describe the urban issue...' : 'Descreva a anomalia...'}">Asphalt depression near bus stop causing vehicle impact.</textarea>
+
+              <div class="mt-2 p-2.5 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/60 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-rounded text-emerald-700 text-xl">add_a_photo</span>
+                  <div class="text-[10px]">
+                    <div class="font-bold text-emerald-950">IMG_20261114.jpg (Compressed)</div>
+                    <div class="text-emerald-700">142 KB • Thumbnail ready</div>
+                  </div>
+                </div>
+                <span class="material-symbols-rounded text-emerald-600 text-base">check_circle</span>
+              </div>
+            </div>
+
+            <button onclick="showToast('${state.lang === 'en' ? 'Submitted via WorkManager (Group Issue #1042)' : 'Submetido via WorkManager (Grupo #1042)'}'); setScreen('reg_list')"
+              class="w-full py-2.5 rounded-xl bg-sky-700 text-white font-semibold text-xs shadow-sm hover:bg-sky-800 transition">
+              ${state.lang === 'en' ? 'Submit Occurrence' : 'Submeter Ocorrência'}
+            </button>
+          </div>
+        </div>
+      `);
+    }
+
+    // SCREEN 2C: REGISTERED TICKET DETAIL & CHAT
+    function renderRegDetail() {
+      const steps = state.lang === 'en'
+        ? ['Open', 'Info Req.', 'In Progress', 'Resolved', 'Closed']
+        : ['Aberto', 'Ped. Info', 'Resolução', 'Resolvido', 'Encerrado'];
+      const activeIdx = ORD.indexOf(cur().status);
+
+      const geofenceCard = (state.geofenceAlertVisible && cur().status === 'In Progress') ? `
+        <div class="p-2.5 rounded-2xl bg-emerald-600 text-white shadow-sm flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <div class="relative flex items-center justify-center w-8 h-8">
+              <span class="radar-ring absolute inset-0 rounded-full bg-white/40"></span>
+              <span class="material-symbols-rounded text-lg relative z-10">local_shipping</span>
+            </div>
+            <div class="text-[11px] leading-tight">
+              <div class="font-bold">${t('geofenceTitle')}</div>
+              <div class="text-emerald-100 text-[10px]">${t('geofenceSub')}</div>
+            </div>
+          </div>
+          <button aria-label="Dismiss" onclick="state.geofenceAlertVisible=false; renderPhoneViewport()" class="text-white/80 hover:text-white">
+            <span class="material-symbols-rounded text-sm">close</span>
+          </button>
+        </div>
+      ` : '';
+
+      const chatHtml = state.chatMessages.map(m => `
+        <div class="flex flex-col ${m.sender === 'citizen' ? 'items-end' : 'items-start'}">
+          <div class="max-w-[85%] px-3 py-1.5 rounded-2xl text-[11px] ${
+            m.sender === 'citizen'
+              ? 'bg-sky-700 text-white rounded-br-xs'
+              : 'bg-white border border-slate-200 text-slate-800 rounded-bl-xs'
+          }">
+            ${state.lang === 'en' ? m.textEn : m.textPt}
+          </div>
+          <span class="text-[9px] text-slate-400 mt-0.5 px-1">${m.time}</span>
+        </div>
+      `).join('');
+
+      return renderNavigationChrome(`
+        <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center gap-2">
+            <button aria-label="Back" onclick="setScreen('reg_list')" class="w-7 h-7 rounded-full bg-white border border-slate-200 flex items-center justify-center">
+              <span class="material-symbols-rounded text-base">arrow_back</span>
+            </button>
+            <span class="text-xs font-bold text-slate-900">${cur().id} • ${(state.lang==='en'?cur().titleEn:cur().titlePt)}</span>
+          </div>
+          ${state.reopenedTicket
+            ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">${t('reopenedBadge')}</span>`
+            : getStatusBadge(cur().status)}
+        </div>
+
+        ${geofenceCard}
+
+        <div class="bg-white p-2.5 rounded-2xl border border-slate-200/80">
+          <div class="flex items-center justify-between">
+            ${steps.map((label, idx) => `
+              <div class="flex flex-col items-center flex-1">
+                <div class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  idx <= activeIdx ? 'bg-sky-700 text-white' : 'bg-slate-200 text-slate-500'
+                }">
+                  ${idx + 1}
+                </div>
+                <span class="text-[9px] font-semibold mt-1 text-center ${idx <= activeIdx ? 'text-sky-900' : 'text-slate-400'}">${label}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        ${citizenTicketInfo()}
+
+        <div class="flex items-center justify-between px-3 py-2 rounded-2xl bg-slate-100 border border-slate-200">
+          <span class="text-[10px] text-slate-600 font-medium">
+            ${state.lang === 'en' ? '5-day post-resolution window:' : 'Janela de 5 dias pós-resolução:'}
+          </span>
+          <button onclick="reopenFlow()"
+            class="text-[10px] font-bold px-2.5 py-1 rounded-xl ${state.reopenedTicket ? 'bg-slate-300 text-slate-700' : 'bg-amber-600 text-white'}">
+            ${state.reopenedTicket ? 'Undo Reopen' : t('reopenBtn')}
+          </button>
+        </div>
+
+        <div class="bg-slate-100/80 p-2.5 rounded-2xl border border-slate-200/80 space-y-2">
+          <div class="space-y-1.5 max-h-36 overflow-y-auto phone-scroll pr-1">
+            ${chatHtml}
+          </div>
+          <div class="flex items-center gap-1.5 pt-1">
+            <input id="chat-input" type="text" placeholder="${t('chatPlaceholder')}"
+              class="flex-1 text-[11px] px-3 py-1.5 rounded-full bg-white border border-slate-200 focus:outline-none focus:border-sky-600" />
+            <button aria-label="Send" onclick="sendChatMessage()" class="w-8 h-8 rounded-full bg-sky-700 text-white flex items-center justify-center shrink-0">
+              <span class="material-symbols-rounded text-base">send</span>
+            </button>
+          </div>
+        </div>
+      `);
+    }
+
+    function sendChatMessage() {
+      const inp = document.getElementById('chat-input');
+      if (!inp || !inp.value.trim()) return;
+      state.chatMessages.push({
+        sender: 'citizen',
+        time: 'Now',
+        textEn: inp.value.trim(),
+        textPt: inp.value.trim()
+      });
+      renderPhoneViewport();
+    }
+
+    // SCREEN 2D: PROFILE
+    function renderRegProfile() {
+      return renderNavigationChrome(`
+        <div class="flex items-center gap-3 pt-1">
+          <div class="w-12 h-12 rounded-2xl bg-sky-700 text-white font-bold text-base flex items-center justify-center shadow-xs">
+            JS
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h2 class="text-sm font-bold text-slate-900">João Manuel Silva</h2>
+              <span class="material-symbols-rounded text-emerald-600 text-base">verified</span>
+            </div>
+            <p class="text-[11px] text-slate-500">joao.silva@email.pt • +351 912 345 678</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-2xl border border-slate-200/80 space-y-2">
+          <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
+            <span class="material-symbols-rounded text-sm text-slate-400">lock</span>
+            <span>${t('lockedFields')}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div class="p-2 rounded-xl bg-slate-100 text-slate-600">
+              <div class="text-[9px] uppercase font-bold text-slate-400">NIF (Unique)</div>
+              <div class="font-mono-code font-semibold text-slate-800">245891032</div>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-100 text-slate-600">
+              <div class="text-[9px] uppercase font-bold text-slate-400">Home GPS</div>
+              <div class="font-mono-code font-semibold text-slate-800">40.209, -8.421</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-2xl border border-slate-200/80 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold text-slate-900">Multi-Factor Auth (MFA)</div>
+              <div class="text-[10px] text-slate-500">Firebase Auth 2FA verification</div>
+            </div>
+            <button onclick="state.mfaEnabled=!state.mfaEnabled; renderPhoneViewport()"
+              class="w-11 h-6 rounded-full transition-colors p-0.5 ${state.mfaEnabled ? 'bg-sky-700' : 'bg-slate-300'}">
+              <div class="w-5 h-5 rounded-full bg-white shadow-xs transform transition-transform ${state.mfaEnabled ? 'translate-x-5' : 'translate-x-0'}"></div>
+            </button>
+          </div>
+
+          <div class="border-t border-slate-100 pt-2.5 flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold text-slate-900">
+                ${state.lang === 'en' ? 'Impact Detection Sensor' : 'Deteção de Impactos'}
+              </div>
+              <div class="text-[10px] text-slate-500">
+                ${state.lang === 'en' ? 'Detect Z-axis road shocks while driving' : 'Detetar solavancos no eixo vertical'}
+              </div>
+            </div>
+            <button onclick="state.impactSensorEnabled=!state.impactSensorEnabled; renderPhoneViewport()"
+              class="w-11 h-6 rounded-full transition-colors p-0.5 ${state.impactSensorEnabled ? 'bg-emerald-600' : 'bg-slate-300'}">
+              <div class="w-5 h-5 rounded-full bg-white shadow-xs transform transition-transform ${state.impactSensorEnabled ? 'translate-x-5' : 'translate-x-0'}"></div>
+            </button>
+          </div>
+        </div>
+      `);
+    }
+
+    // SCREEN 3A: OPERATOR PANEL
+    function renderOpPanel() {
+      const target = issuesData[0];
+
+      return renderNavigationChrome(`
+        <div class="flex items-center justify-between pt-1">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">${t('opPanelTitle')}</h2>
+            <p class="text-[10px] text-slate-500">Eng. Carlos Mendes • ops@cm-coimbra.pt</p>
+          </div>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> GPS Active
+          </span>
+        </div>
+
+        <div class="bg-white p-3 rounded-2xl border border-sky-200 shadow-xs space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-sky-900">${target.id} • ${state.lang === 'en' ? target.catEn : target.catPt}</span>
+            ${getStatusBadge(state.operatorTicketStatus)}
+          </div>
+          <p class="text-xs font-semibold text-slate-800">${state.lang === 'en' ? target.titleEn : target.titlePt}</p>
+
+          <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[10px] space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Exact GPS:</span>
+              <span class="font-mono-code font-semibold text-slate-800">${target.coords}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Author Contact:</span>
+              <span class="font-semibold text-slate-800">${target.citizen}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">20m Geofence Broadcast:</span>
+              <span class="font-bold text-emerald-700">4 citizens notified</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1.5 pt-1">
+            <button onclick="state.operatorTicketStatus='Info Requested'; renderPhoneViewport(); showToast('Info Requested from Citizen')"
+              class="py-1.5 px-2 rounded-xl text-[10px] font-bold bg-amber-100 text-amber-900 hover:bg-amber-200 transition">
+              ${state.lang === 'en' ? 'Request Info' : 'Pedir Dados'}
+            </button>
+            <button onclick="state.operatorTicketStatus='In Progress'; renderPhoneViewport(); showToast('Work Started • 20m Geofence Active')"
+              class="py-1.5 px-2 rounded-xl text-[10px] font-bold bg-indigo-100 text-indigo-900 hover:bg-indigo-200 transition">
+              ${state.lang === 'en' ? 'Start Work' : 'Iniciar Obra'}
+            </button>
+            <button onclick="state.operatorTicketStatus='Resolved'; renderPhoneViewport(); showToast('Proof uploaded • 5-day timer started')"
+              class="py-1.5 px-2 rounded-xl text-[10px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition">
+              ${state.lang === 'en' ? 'Resolve + Proof' : 'Resolver + Foto'}
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            ${state.lang === 'en' ? 'All Municipal Tickets (4)' : 'Todas as Ocorrências (4)'}
+          </div>
+          ${issuesData.slice(1).map(item => `
+            <div class="bg-white p-2.5 rounded-2xl border border-slate-200/80 flex items-center justify-between text-xs">
+              <div class="min-w-0 pr-2">
+                <div class="font-bold text-slate-900 truncate">${item.id} • ${state.lang === 'en' ? item.titleEn : item.titlePt}</div>
+                <div class="text-[10px] text-slate-500 font-mono-code">${item.coords}</div>
+              </div>
+              ${getStatusBadge(item.status)}
+            </div>
+          `).join('')}
+        </div>
+      `);
+    }
+
+    // SCREEN 3B: OPERATOR ADMIN
+    function renderOpAdmin() {
+      return renderNavigationChrome(`
+        <div class="pt-1">
+          <h2 class="text-base font-bold text-slate-900">${t('pendingCitizens')}</h2>
+          <p class="text-[10px] text-slate-500">${state.lang === 'en' ? 'Verify NIF & residence before activating account' : 'Validar NIF e morada antes da ativação'}</p>
+        </div>
+
+        <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="text-xs font-bold text-slate-900">Beatriz Almeida</div>
+            <div class="text-[10px] font-mono-code text-slate-600">NIF: 271 904 118</div>
+            <div class="text-[10px] text-slate-500 truncate">GPS: 40.2104° N, 8.4261° W (Coimbra)</div>
+          </div>
+          ${state.citizenApproved ? `
+            <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold shrink-0">
+              ${t('approvedBadge')}
+            </span>
+          ` : `
+            <button onclick="state.citizenApproved=true; renderPhoneViewport(); showToast('Citizen NIF Validated & Activated')"
+              class="px-3 py-1.5 rounded-xl bg-sky-700 text-white text-[11px] font-semibold hover:bg-sky-800 shrink-0 transition">
+              ${t('approveBtn')}
+            </button>
+          `}
+        </div>
+
+        <div class="pt-1 space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">${t('categoriesMgr')}</h3>
+            <span class="text-[10px] text-sky-700 font-semibold">+ Add Typology</span>
+          </div>
+          <div class="space-y-1.5">
+            ${state.categories.map((cat, idx) => `
+              <div class="bg-white px-3 py-2 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-rounded text-base ${cat.active ? 'text-sky-700' : 'text-slate-400'}">${cat.icon}</span>
+                  <div>
+                    <div class="text-xs font-semibold ${cat.active ? 'text-slate-900' : 'text-slate-400 line-through'}">
+                      ${state.lang === 'en' ? cat.nameEn : cat.namePt}
+                    </div>
+                    <div class="text-[9px] text-slate-400">${cat.count} tickets</div>
+                  </div>
+                </div>
+                <button onclick="state.categories[${idx}].active=!state.categories[${idx}].active; renderPhoneViewport()"
+                  class="w-10 h-5 rounded-full transition-colors p-0.5 ${cat.active ? 'bg-emerald-600' : 'bg-slate-300'}">
+                  <div class="w-4 h-4 rounded-full bg-white shadow-2xs transform transition-transform ${cat.active ? 'translate-x-5' : 'translate-x-0'}"></div>
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `);
+    }
+
+    function renderPhoneViewport() {
+      const shell = document.getElementById('app-shell');
+      const routes = {
+        anon_dash: renderAnonDashboard,
+        anon_list: renderAnonList,
+        anon_detail: renderAnonDetail,
+        reg_list: renderRegList,
+        reg_create: renderRegCreate,
+        reg_detail: renderRegDetail,
+        reg_profile: renderRegProfile,
+        op_panel: renderOpPanel,
+        op_admin: renderOpAdmin
+      };
+      const fn = routes[state.screen] || renderAnonDashboard;
+      shell.innerHTML = fn();
+    }
+
+    function renderAll() {
+      updateTopControls();
+      renderSidebar();
+      renderPhoneViewport();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderAll();
+    });
+  </script>
+<script>
+/* ===== CityFix v2: auth, permissions, notifications, operator tools ===== */
+const L=(a,b)=>state.lang==='en'?a:b;
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const now=()=>{const d=new Date();return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toTimeString().slice(0,5)};
+const ORD=['Open','Info Requested','In Progress','Resolved','Closed'];
+const PT={'Open':'Aberto','Info Requested':'Pedido de Informações','In Progress':'Em Resolução','Resolved':'Resolvido','Closed':'Encerrado'};
+const SIT=[['Damage','Dano'],['Malfunction','Avaria'],['Destruction','Destruição'],['Theft','Roubo']];
+const ICONS=['add_road','water_drop','lightbulb','delete_sweep','park','traffic','signpost','report'];
+const vEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e||'');
+const vPhone=p=>/^(\+351)?[29]\d{8}$/.test((p||'').replace(/\s+/g,''));
+const vNif=n=>{if(!/^\d{9}$/.test(n||''))return false;let s=0;for(let i=0;i<8;i++)s+=n[i]*(9-i);const r=s%11;return +n[8]===(r<2?0:11-r)};
+Object.assign(state,{form:{},err:{},user:null,loginUser:null,perms:{loc:null,bg:null,cam:null,notif:null},permsDone:false,outside:false,modal:null,opFilter:'All',unread:2,
+ users:[
+  {email:'joao.silva@email.pt',name:'João Manuel Silva',phone:'+351 912 345 678',nif:'245891032',role:'registered',status:'active',coords:'40.209, -8.421',impact:true,mfa:true},
+  {email:'beatriz@email.pt',name:'Beatriz Almeida',phone:'+351 934 000 111',nif:'271904118',role:'registered',status:'pending',coords:'40.2104, -8.4261',impact:false,mfa:true},
+  {email:'ops@cm-coimbra.pt',name:'Eng. Carlos Mendes',phone:'+351 239 000 000',nif:'500000000',role:'operator',status:'active',coords:'',impact:false,mfa:true}],
+ notifs:[
+  {ic:'sync_alt',en:'ISS-1042 is now In Progress',pt:'ISS-1042 passou a Em Resolução',ts:'14 Nov 10:02',read:false},
+  {ic:'forum',en:'New message from Municipal Services',pt:'Nova mensagem dos Serviços Camarários',ts:'14 Nov 09:42',read:false},
+  {ic:'radar',en:'Municipal team within 20 m of your issue',pt:'Equipa camarária a menos de 20 m',ts:'13 Nov 16:20',read:true},
+  {ic:'timer',en:'ISS-1039: 24h left before it closes',pt:'ISS-1039: faltam 24h para o fecho',ts:'13 Nov 08:00',read:true}]});
+issuesData.forEach((i,k)=>{const n=ORD.indexOf(i.status);const seq=i.status==='Info Requested'?['Open','Info Requested']:ORD.filter((s,x)=>s!=='Info Requested'&&x<=n);i.history=seq.map((s,j)=>({ts:(10+j)+' Nov 0'+(8+k)+':'+(10+j*7),st:s,note:''}))});
+
+
+/* v3: per-ticket owner, followers, coordinates and chat */
+const OWN={'ISS-1042':'joao.silva@email.pt','ISS-1039':'joao.silva@email.pt','ISS-1035':'rui@email.pt','ISS-1031':'ana@email.pt'};
+const MSGS={
+ 'ISS-1042':[{sender:'citizen',time:'08:10',textEn:'Deep pothole in the right lane, cars are swerving to avoid it.',textPt:'Buraco fundo na faixa da direita, os carros desviam-se.'},{sender:'operator',time:'10:02',textEn:'Municipal Services: a team is scheduled for this afternoon.',textPt:'Serviços Camarários: equipa agendada para esta tarde.'}],
+ 'ISS-1039':state.chatMessages,
+ 'ISS-1035':[{sender:'operator',time:'11:20',textEn:'Municipal Services: can you send a photo of the base of the post?',textPt:'Serviços Camarários: pode enviar uma foto da base do poste?'}]};
+issuesData.forEach(i=>{const m=i.coords.match(/([\d.]+)° N, ([\d.]+)° W/);Object.assign(i,{owner:OWN[i.id],followers:[],msgs:MSGS[i.id]||[],lat:+m[1],lng:-m[2]})});
+issuesData.find(i=>i.id==='ISS-1039').proof='IMG_proof_1039.jpg';
+/* ---------- tiny UI helpers ---------- */
+const cur=()=>issuesData.find(i=>i.id===state.selectedIssueId)||issuesData[0];
+Object.defineProperty(state,'chatMessages',{get:()=>cur().msgs,configurable:true}); /* chat is per ticket */
+const mediaThumbs=i=>`<div class="flex gap-1.5"><div class="w-14 h-14 rounded-xl bg-slate-200 flex flex-col items-center justify-center text-[9px]"><span class="material-symbols-rounded">photo_camera</span>${L('Photo','Foto')}</div>${i.hasVideo?`<div class="w-14 h-14 rounded-xl bg-slate-200 flex flex-col items-center justify-center text-[9px]"><span class="material-symbols-rounded">videocam</span>${L('Video','Vídeo')}</div>`:''}${i.proof?`<div class="w-14 h-14 rounded-xl bg-emerald-100 text-emerald-900 flex flex-col items-center justify-center text-[9px]"><span class="material-symbols-rounded">verified</span>${L('Proof','Prova')}</div>`:''}</div>`;
+const historyList=i=>`<div class="text-[10px] font-bold uppercase text-slate-500">${L('History','Histórico')}</div>${i.history.map(h=>`<div class="flex justify-between gap-2 text-[11px]"><span>${getStatusBadge(h.st)} ${esc(h.note)}</span><span class="text-slate-500 shrink-0">${h.ts}</span></div>`).join('')}`;
+function citizenTicketInfo(){const i=cur();return `<div class="bg-white p-2.5 rounded-2xl border border-slate-200/80 space-y-2">${mediaThumbs(i)}${i.proof?`<div class="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900">✅ ${L('Resolution proof attached by the municipal team:','Prova de resolução anexada pela equipa camarária:')} <b>${esc(i.proof)}</b></div>`:''}${historyList(i)}</div>`}
+const E=k=>state.err[k]?`<div class="text-[10px] font-semibold text-rose-600">${state.err[k]}</div>`:'';
+const F=(k,label,type='text',ph='',dis=false,fixed='')=>`<label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">${label}<input type="${type}" ${dis?'disabled':''} placeholder="${ph}" value="${esc(dis?fixed:state.form[k])}" oninput="state.form['${k}']=this.value" class="mt-0.5 w-full text-xs normal-case tracking-normal font-normal p-2 rounded-xl border ${state.err[k]?'border-rose-500':'border-slate-200'} ${dis?'bg-slate-100 text-slate-500':'bg-white'}">${E(k)}</label>`;
+const FILE=(k,label)=>`<label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">${label}<input type="file" accept="image/*,video/*" onchange="state.form['${k}']=this.files[0]?this.files[0].name:'';renderPhoneViewport()" class="mt-0.5 w-full text-[11px] normal-case font-normal"><span class="block normal-case tracking-normal font-normal text-slate-600">${state.form[k]?'📎 '+esc(state.form[k])+' · '+L('compressed + thumbnail ready','comprimido + miniatura pronta'):''}</span>${E(k)}</label>`;
+const B=(txt,fn,c='bg-sky-700 text-white')=>`<button onclick="${fn}" class="w-full py-2.5 rounded-xl text-xs font-semibold ${c}">${txt}</button>`;
+const A=(txt,fn)=>`<button onclick="${fn}" class="text-[11px] font-semibold text-sky-700 underline">${txt}</button>`;
+const H=(t,sub)=>`<div class="pt-2"><h2 class="text-base font-bold text-slate-900">${t}</h2>${sub?`<p class="text-[11px] text-slate-500">${sub}</p>`:''}</div>`;
+const card=h=>`<div class="bg-white p-3 rounded-2xl border border-slate-200/80 space-y-2">${h}</div>`;
+const plain=h=>`<div class="flex-1 overflow-y-auto phone-scroll p-4 space-y-3">${h}</div>`;
+const back=(to,title)=>`<div class="flex items-center gap-2 pt-1"><button aria-label="Back" onclick="setScreen('${to}')" class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center"><span class="material-symbols-rounded text-base">arrow_back</span></button><span class="text-xs font-bold truncate">${title}</span></div>`;
+const TG=(on,fn)=>`<button role="switch" aria-checked="${on}" onclick="${fn}" class="w-11 h-6 rounded-full p-0.5 shrink-0 ${on?'bg-sky-700':'bg-slate-300'}"><div class="w-5 h-5 rounded-full bg-white transform transition-transform ${on?'translate-x-5':''}"></div></button>`;
+const mdl=(title,body,ok)=>`<div class="absolute inset-0 z-40 bg-black/50 flex items-center justify-center p-3"><div class="bg-white rounded-2xl p-3 w-full max-h-full overflow-y-auto space-y-2"><div class="text-sm font-bold">${title}</div>${body}<div class="flex gap-2"><button onclick="state.modal=null;state.err={};renderPhoneViewport()" class="flex-1 py-2 rounded-xl bg-slate-100 text-xs font-semibold">${L('Cancel','Cancelar')}</button><button onclick="${ok}" class="flex-1 py-2 rounded-xl bg-sky-700 text-white text-xs font-semibold">OK</button></div></div></div>`;
+const openModal=(fn,preset)=>{state.form=preset||{};state.err={};state.modal=fn;renderPhoneViewport()};
+const TA=(k,label)=>`<label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">${label}<textarea rows="3" oninput="state.form['${k}']=this.value" class="mt-0.5 w-full text-xs normal-case tracking-normal font-normal p-2 rounded-xl border ${state.err[k]?'border-rose-500':'border-slate-200'}">${esc(state.form[k])}</textarea>${E(k)}</label>`;
+
+/* ---------- core overrides ---------- */
+function setScreen(s){state.screen=s;state.form={};state.err={};state.modal=null;renderAll()}
+function setRole(r){state.role=r;state.user=r==='anonymous'?null:state.users.find(u=>u.role===(r==='operator'?'operator':'registered')&&u.status==='active');state.screen=roleConfigs[r].screens[0].id;state.form={};state.err={};state.modal=null;renderAll()}
+function logout(){state.user=null;state.role='anonymous';setScreen('anon_dash')}
+function pushNotif(ic,en,pt){state.notifs.unshift({ic,en,pt,ts:now(),read:false});state.unread++;showToast('🔔 '+L(en,pt))}
+function transition(i,st,note){i.status=st;i.history.push({ts:now(),st,note:note||''});pushNotif('sync_alt',i.id+': '+st,i.id+': '+PT[st])}
+function topAction(){return state.role==='anonymous'?`<button onclick="setScreen('auth_login')" class="px-3 py-1.5 rounded-full bg-sky-700 text-white text-[11px] font-semibold">${L('Sign In','Entrar')}</button>`:`<button aria-label="Notifications" onclick="setScreen('notif')" class="relative w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center"><span class="material-symbols-rounded">notifications</span>${state.unread?`<b class="absolute -top-1 -right-1 bg-rose-600 text-white text-[9px] rounded-full px-1">${state.unread}</b>`:''}</button>`}
+
+function renderNavigationChrome(main,fab=''){
+ const N={anonymous:[['anon_dash','dashboard',L('Dashboard','Painel')],['anon_list','format_list_bulleted',L('Feed','Lista')]],
+  registered:[['anon_dash','dashboard',L('Home','Início')],['anon_list','public',L('Public','Públicas')],['reg_list','assignment',L('Mine','Minhas')],['reg_create','add_circle',L('Report','Reportar')],['reg_profile','person',L('Profile','Perfil')]],
+  operator:[['op_panel','engineering',L('Tickets','Ocorr.')],['op_admin','verified_user',L('Citizens','Registos')],['op_cats','category',L('Types','Tipologias')],['op_profile','person',L('Profile','Perfil')]]}[state.role];
+ const on=id=>state.screen===id||(id==='anon_list'&&state.screen==='anon_detail')||(id==='reg_list'&&state.screen==='reg_detail')||(id==='op_panel'&&state.screen==='op_detail')||(id==='anon_dash'&&state.screen==='notif');
+ if(state.orientation==='portrait')return `<div class="flex-1 overflow-y-auto phone-scroll px-3.5 pb-4 space-y-3">${main}</div>${fab}<nav class="h-16 bg-[#eef2f9] border-t border-slate-200/80 px-1 flex items-center justify-around shrink-0">${N.map(n=>`<button onclick="setScreen('${n[0]}')" class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1"><div class="px-3 py-1 rounded-full ${on(n[0])?'bg-sky-200/90 text-sky-950':'text-slate-600'}"><span class="material-symbols-rounded text-[20px]">${n[1]}</span></div><span class="text-[10px] font-semibold ${on(n[0])?'text-slate-900':'text-slate-500'}">${n[2]}</span></button>`).join('')}</nav>`;
+ return `<div class="flex-1 flex overflow-hidden"><nav class="w-20 bg-[#eef2f9] border-r border-slate-200/80 py-2 flex flex-col items-center justify-center gap-1 shrink-0 overflow-y-auto">${N.map(n=>`<button onclick="setScreen('${n[0]}')" class="flex flex-col items-center gap-0.5 w-full py-0.5"><div class="px-3 py-0.5 rounded-full ${on(n[0])?'bg-sky-200/90 text-sky-950':'text-slate-600'}"><span class="material-symbols-rounded text-[19px]">${n[1]}</span></div><span class="text-[9px] font-semibold ${on(n[0])?'text-slate-900':'text-slate-500'}">${n[2]}</span></button>`).join('')}</nav><div class="flex-1 overflow-y-auto phone-scroll p-3.5 space-y-3">${main}</div>${fab}</div>`}
+
+function renderPhoneViewport(){
+ const R={anon_dash:renderAnonDashboard,anon_list:renderAnonList,anon_detail:renderAnonDetail,reg_list:renderRegList,reg_create:renderRegCreate,reg_detail:renderRegDetail,reg_profile:()=>sProfile(),op_panel:renderOpPanel,op_admin:renderOpAdmin,op_detail:sOpDetail,op_cats:sOpCats,op_profile:()=>sProfile(),auth_login:sLogin,auth_mfa:sMfa,auth_recover:sRecover,signup_reg:()=>sSignup(false),signup_op:()=>sSignup(true),pending:sPending,perm:sPerm,notif:sNotif};
+ const shell=document.getElementById('app-shell');
+ const fn=(state.role==='anonymous'&&(state.outside||state.perms.loc==='denied')&&state.screen.startsWith('anon_'))?sBlocked:(R[state.screen]||renderAnonDashboard);
+ shell.innerHTML=fn();
+ if(state.screen==='reg_detail')fixRegDetail();
+ if(state.modal)shell.insertAdjacentHTML('beforeend',state.modal());
+}
+function fixRegDetail(){
+ const i=cur(),btn=document.querySelector('[onclick="reopenFlow()"]');
+ if(btn){const box=btn.parentElement;
+  if(i.status==='Resolved'&&state.user&&i.owner===state.user.email){box.firstElementChild.textContent=L('Resolved – you can reopen within 5 days:','Resolvido – pode reabrir nos próximos 5 dias:');btn.textContent=L('Reopen…','Reabrir…');btn.className='text-[10px] font-bold px-2.5 py-1 rounded-xl bg-amber-600 text-white'}
+  else if(i.status==='Closed')box.innerHTML='🔒 '+L('Closed – archived and locked.','Encerrado – arquivado e bloqueado.');
+  else box.remove()}
+ if(i.status==='Closed'){const c=document.getElementById('chat-input');if(c){c.disabled=true;c.placeholder=L('Chat locked','Chat bloqueado')}}
+}
+function reopenFlow(){openModal(()=>mdl(L('Reopen ticket','Reabrir ticket'),TA('why',L('Justification (required)','Justificação (obrigatória)')),'doReopen()'))}
+function doReopen(){if((state.form.why||'').trim().length<10){state.err={why:L('Please explain (min. 10 chars)','Justifique (mín. 10 car.)')};return renderPhoneViewport()}const i=cur();transition(i,'Open',L('Reopened: ','Reaberto: ')+state.form.why.trim());state.modal=null;renderPhoneViewport()}
+
+/* ---------- auth ---------- */
+function sLogin(){return plain(`${H('CityFix',L('Sign in','Iniciar sessão'))}${card(`${F('email','Email','email','joao.silva@email.pt')}${F('pw',L('Password','Palavra-passe'),'password')}${B(L('Sign in','Entrar'),'doLogin()')}<div class="flex justify-between">${A(L('Forgot password?','Recuperar credenciais'),"setScreen('auth_recover')")}${A(L('Continue as guest','Continuar anónimo'),"setScreen('anon_dash')")}</div>`)}${card(`${B(L('Register as citizen','Registar munícipe'),"setScreen('signup_reg')",'bg-slate-100 text-slate-800')}${B(L('Register as operator','Registar operador'),"setScreen('signup_op')",'bg-slate-100 text-slate-800')}`)}<div class="text-[10px] text-slate-500">Demo: joao.silva@email.pt · beatriz@email.pt (${L('pending','pendente')}) · ops@cm-coimbra.pt — ${L('any password ≥ 6 chars','qualquer palavra-passe ≥ 6 car.')}</div>`)}
+function doLogin(){const f=state.form,e={};const u=state.users.find(x=>x.email===(f.email||'').trim().toLowerCase());
+ if(!vEmail(f.email))e.email=L('Invalid email','Email inválido');else if(!u)e.email=L('Account not found','Conta não encontrada');
+ if((f.pw||'').length<6)e.pw=L('Min. 6 characters','Mín. 6 caracteres');
+ state.err=e;if(Object.keys(e).length)return renderPhoneViewport();
+ state.loginUser=u;if(u.status==='pending')return setScreen('pending');
+ setScreen('auth_mfa')} /* v3: MFA is mandatory */
+function sMfa(){const u=state.loginUser;return plain(`${back('auth_login',L('Two-factor verification','Verificação em dois passos'))}${card(`<p class="text-[11px]">${L('Enter the 6-digit code sent to','Introduza o código de 6 dígitos enviado para')} <b>${esc(u&&u.email)}</b></p>${F('code',L('Code','Código'),'text','123456')}${B(L('Verify','Verificar'),'doMfa()')}${A(L('Resend code','Reenviar código'),"showToast(L('Code resent (demo: 123456)','Código reenviado (demo: 123456)'))")}<div class="text-[10px] text-slate-500">Demo: 123456</div>`)}`)}
+function doMfa(){if((state.form.code||'').trim()!=='123456'){state.err={code:L('Wrong code','Código errado')};return renderPhoneViewport()}finishLogin(state.loginUser)}
+function finishLogin(u){state.user=u;state.role=u.role==='operator'?'operator':'registered';state.screen=['loc','bg','cam','notif'].some(k=>!state.perms[k])?'perm':(u.role==='operator'?'op_panel':'reg_list');state.form={};state.err={};renderAll()}
+function sRecover(){const s=state.form.sent;return plain(`${back('auth_login',L('Recover credentials','Recuperar credenciais'))}${card(s?`<p class="text-[11px]">✅ ${L('If the account exists, a reset link was sent to','Se a conta existir, foi enviado um link para')} <b>${esc(state.form.email)}</b></p>${B(L('Back to sign in','Voltar ao login'),"setScreen('auth_login')")}`:`${F('email','Email','email')}${B(L('Send reset link','Enviar link'),'doRecover()')}`)}`)}
+function doRecover(){if(!vEmail(state.form.email)){state.err={email:L('Invalid email','Email inválido')};return renderPhoneViewport()}state.form.sent=true;renderPhoneViewport()}
+function sSignup(op){const f=state.form;return plain(`${back('auth_login',op?L('Operator registration','Registo de operador'):L('Citizen registration','Registo de munícipe'))}${card(`${F('name',L('Name','Nome'))}${F('email','Email','email',op?'name@cm-coimbra.pt':'')}${F('phone',L('Phone','Telefone'),'tel','+351 9xx xxx xxx')}${F('nif','NIF','text','501964843')}${F('pw',L('Password','Palavra-passe'),'password')}${op?'':`<div class="text-[10px] font-bold uppercase text-slate-500">${L('Home location','Georreferenciação')}</div><button onclick="state.form.coords='40.2104, -8.4261';renderPhoneViewport()" class="w-full py-2 rounded-xl bg-slate-100 text-xs font-semibold">📍 ${f.coords?esc(f.coords):L('Use current location','Usar localização atual')}</button>${E('coords')}`}${FILE('photo',L('Photo (optional)','Foto (opcional)'))}${op?'':`<label class="flex items-center justify-between text-xs"><span>${L('Enable impact detection','Ativar Deteção de Impactos')}</span><input type="checkbox" ${f.impact?'checked':''} onchange="state.form.impact=this.checked"></label>`}${B(L('Register','Registar'),`doSignup(${op})`)}`)}`)}
+function doSignup(op){const f=state.form,e={},em=(f.email||'').trim().toLowerCase();
+ if(!(f.name||'').trim())e.name=L('Required','Obrigatório');
+ if(!vEmail(em))e.email=L('Invalid email','Email inválido');else if(op&&!em.endsWith('@cm-coimbra.pt'))e.email=L('Must be @cm-coimbra.pt','Tem de ser @cm-coimbra.pt');else if(state.users.some(u=>u.email===em))e.email=L('Email already in use','Email já registado');
+ if(!vPhone(f.phone))e.phone=L('Invalid PT phone number','Nº de telefone inválido');
+ if(!vNif(f.nif))e.nif=L('Invalid NIF (9 digits + check digit)','NIF inválido (9 dígitos + controlo)');else if(state.users.some(u=>u.nif===f.nif&&(u.role==='operator')===op))e.nif=L('NIF already registered for this profile','NIF já registado neste perfil');
+ if((f.pw||'').length<6)e.pw=L('Min. 6 characters','Mín. 6 caracteres');
+ if(!op&&!f.coords)e.coords=L('Location required','Localização obrigatória');
+ state.err=e;if(Object.keys(e).length)return renderPhoneViewport();
+ const u={email:em,name:f.name.trim(),phone:f.phone,nif:f.nif,role:op?'operator':'registered',status:op?'active':'pending',coords:f.coords||'',impact:!!f.impact,mfa:true};
+ state.users.push(u);
+ if(op){setScreen('auth_login');state.form.email=em;renderPhoneViewport();showToast(L('Operator account active','Conta de operador ativa'))}else setScreen('pending')}
+const sPending=()=>plain(`${H('⏳ '+L('Registration pending','Registo pendente'),L('Municipal services must validate your NIF before you can sign in.','Os serviços camarários têm de validar o seu NIF antes de poder entrar.'))}${B(L('Back to sign in','Voltar ao login'),"setScreen('auth_login')")}<div class="text-[10px] text-slate-500">Demo: ${L('sign in as operator → Citizens tab → Validate','entre como operador → separador Registos → Validar')}</div>`);
+
+/* ---------- permissions / blocked / notifications ---------- */
+const PERMS=[['loc','my_location','Location (while using)','Localização (em uso)','For your home location, group reports and the 10 km area.','Para georreferenciação, ocorrências de grupo e raio de 10 km.'],['bg','near_me','Background location','Localização em segundo plano','For 20 m geofence alerts and impact detection while driving.','Para alertas de geofence 20 m e deteção de impactos em andamento.'],['cam','photo_camera','Camera','Câmara','Capture photos/videos of the issue.','Capturar fotos/vídeos da ocorrência.'],['notif','notifications','Notifications','Notificações','Ticket updates, messages and proximity alerts.','Estados, mensagens e alertas de proximidade.']];
+function setPerm(k,v){state.perms[k]=v;if(k==='loc'&&v==='denied')state.perms.bg='denied';renderPhoneViewport()}
+function sPerm(){const anon=!state.user;return plain(`${H(L('Permissions','Permissões'),anon?L('CityFix needs your location to confirm you are within 10 km of Pr. República.','O CityFix precisa da sua localização para confirmar que está a menos de 10 km da Pr. República.'):L('Grant what you need; features degrade gracefully if denied.','Conceda o necessário; sem permissão, a funcionalidade fica limitada.'))}${PERMS.filter(p=>!anon||p[0]==='loc').map(p=>{const v=state.perms[p[0]],lock=p[0]==='bg'&&state.perms.loc!=='granted'&&v!=='denied';return card(`<div class="flex items-center gap-2"><span class="material-symbols-rounded">${p[1]}</span><b class="text-xs">${L(p[2],p[3])}</b><span class="ml-auto text-[10px] font-bold ${v==='granted'?'text-emerald-700':v==='denied'?'text-rose-600':'text-slate-400'}">${v?(v==='granted'?L('Granted','Concedida'):L('Denied','Negada')):L('Not asked','Por pedir')}</span></div><p class="text-[11px] text-slate-600">${L(p[4],p[5])}</p>${lock?`<p class="text-[10px] text-amber-700">${L('Grant foreground location first (Android 11+).','Conceda primeiro a localização em uso (Android 11+).')}</p>`:`<div class="flex gap-2"><button onclick="setPerm('${p[0]}','granted')" class="flex-1 py-1.5 rounded-xl bg-sky-700 text-white text-[11px] font-semibold">${L('Allow','Permitir')}</button><button onclick="setPerm('${p[0]}','denied')" class="flex-1 py-1.5 rounded-xl bg-slate-100 text-[11px] font-semibold">${L('Deny','Negar')}</button></div>`}${v==='denied'?`<p class="text-[10px] text-rose-600">${L('Feature limited. Enable it in system settings.','Funcionalidade limitada. Ative nas definições do sistema.')}</p>`:''}`)}).join('')}${B(L('Continue','Continuar'),'permDone()')}`)}
+function permDone(){state.permsDone=true;setScreen(state.user?(state.user.role==='operator'?'op_panel':'reg_list'):'anon_dash')}
+const sBlocked=()=>state.perms.loc==='denied'&&!state.outside?plain(`${H('📍 '+L('Location needed','Localização necessária'),L('Anonymous access requires your location to verify the 10 km area around Pr. República.','O acesso anónimo requer a sua localização para verificar o raio de 10 km da Pr. República.'))}${B(L('Grant location','Conceder localização'),"setScreen('perm')")}${B(L('Sign in (works anywhere)','Entrar (funciona em qualquer local)'),"setScreen('auth_login')",'bg-slate-100 text-slate-800')}`):plain(`${H('📍 '+L('Outside service area','Fora da área de serviço'),L('Anonymous access is limited to 10 km around Pr. República (you are ~14.2 km away).','O acesso anónimo está limitado a 10 km da Pr. República (está a ~14,2 km).'))}${B(L('Retry location','Repetir localização'),"showToast('Still outside 10 km')",'bg-slate-100 text-slate-800')}${B(L('Sign in (works anywhere)','Entrar (funciona em qualquer local)'),"setScreen('auth_login')")}`);
+function sNotif(){const h=renderNavigationChrome(`${H(L('Notifications','Notificações'))}${state.notifs.map(n=>card(`<div class="flex gap-2 items-center ${n.read?'opacity-60':''}"><span class="material-symbols-rounded">${n.ic}</span><div class="text-xs flex-1">${L(n.en,n.pt)}<div class="text-[10px] text-slate-500">${n.ts}</div></div>${n.read?'':'<span class="w-2 h-2 rounded-full bg-rose-600"></span>'}</div>`)).join('')}`);state.notifs.forEach(n=>n.read=true);state.unread=0;return h}
+
+/* ---------- registered: report + profile ---------- */
+/* v3: group aggregation by real distance (10 m) – joins the existing ticket instead of duplicating it */
+const dist=(a,b,c,d)=>{const r=x=>x*Math.PI/180,h=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 2*6371000*Math.asin(Math.sqrt(h))};
+const LOCS=[['here','Current GPS (Av. Sá da Bandeira)','GPS atual (Av. Sá da Bandeira)',40.21154,-8.42925],['lamp','Next to the fallen lamp post','Junto ao poste derrubado',40.21415,-8.43156],['far','Elsewhere (Rua da Sofia)','Outro local (Rua da Sofia)',40.2125,-8.4300]];
+const curLoc=()=>LOCS.find(l=>l[0]===state.form.loc)||LOCS[0];
+const follows=(i,u)=>!!u&&(i.owner===u.email||(i.followers||[]).includes(u.email));
+function findMatch(){const f=state.form,c=state.categories.find(x=>x.id===f.cat),p=curLoc();if(!c)return null;let best=null;
+ issuesData.forEach(i=>{if(i.catEn!==c.nameEn||i.sitEn!==f.sit||['Resolved','Closed'].includes(i.status))return;const d=dist(p[3],p[4],i.lat,i.lng);if(d<=10&&(!best||d<best.d))best={i,d}});return best}
+function quickReport(){state.impactAlertVisible=false;setScreen('reg_create');state.form={cat:'cat1',sit:'Damage',scope:'Public',loc:'here'};renderPhoneViewport()}
+function renderRegCreate(){const f=state.form,act=state.categories.filter(c=>c.active);
+ if(!f.cat||!act.some(c=>c.id===f.cat))f.cat=act[0]&&act[0].id;if(!f.sit)f.sit='Damage';if(!f.scope)f.scope='Public';if(!f.loc)f.loc='here';
+ const p=curLoc(),mm=findMatch(),m=mm&&mm.i,mine=m&&follows(m,state.user),chip=(on,fn,txt)=>`<button onclick="${fn}" class="px-2.5 py-1.5 rounded-xl text-[11px] font-semibold border ${on?'bg-sky-700 text-white border-sky-700':'bg-white border-slate-200'}">${txt}</button>`;
+ const banner=!m?'':mine
+  ?`<div class="p-2.5 rounded-2xl bg-amber-50 border border-amber-300 text-[11px] space-y-1.5">⚠️ <b>${L('You already follow','Já acompanha')} ${m.id}</b> – ${L('same type and situation','mesma tipologia e situação')} ~${Math.round(mm.d)} m. ${L('Add new info in its chat instead of a duplicate.','Acrescente informação no chat em vez de duplicar.')}${B(L('Open','Abrir')+' '+m.id,`state.selectedIssueId='${m.id}';setScreen('reg_detail')`,'bg-amber-600 text-white')}</div>`
+  :`<div class="p-2.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-[11px]">👥 <b>${L('Group issue','Ocorrência de grupo')}</b> – ${L('same type and situation','mesma tipologia e situação')} ${L('at','a')} ~${Math.round(mm.d)} m ${L('of','de')} ${m.id} (≤ 10 m). ${L('You will join it and follow it together with','Vai juntar-se e acompanhá-la com')} ${m.groupCount} ${L('citizen(s); no duplicate ticket is created.','munícipe(s); não é criado ticket duplicado.')}</div>`;
+ return renderNavigationChrome(`${H(L('New occurrence','Nova ocorrência'),'GPS '+p[3].toFixed(5)+', '+p[4].toFixed(5))}${banner}${state.perms.cam==='denied'?`<div class="p-2 rounded-xl bg-amber-50 text-[11px]">${L('Camera denied – pick from gallery.','Câmara negada – escolha da galeria.')}</div>`:''}${card(`<div class="text-[10px] font-bold uppercase text-slate-500">${L('Location','Localização')}</div><div class="flex flex-col gap-1">${LOCS.map(l=>chip(f.loc===l[0],`state.form.loc='${l[0]}';renderPhoneViewport()`,'📍 '+L(l[1],l[2]))).join('')}</div><div class="text-[10px] text-slate-500">${L('Demo: pick a GPS position to test the 10 m group rule (try Lighting + Destruction next to the lamp post).','Demo: escolha uma posição GPS para testar a regra dos 10 m (experimente Iluminação + Destruição junto ao poste).')}</div>`)}${card(`<div class="text-[10px] font-bold uppercase text-slate-500">${L('Category (active only)','Categoria (só ativas)')}</div><div class="flex flex-wrap gap-1.5">${act.map(c=>chip(f.cat===c.id,`state.form.cat='${c.id}';renderPhoneViewport()`,L(c.nameEn,c.namePt))).join('')}</div><div class="text-[10px] font-bold uppercase text-slate-500">${L('Situation','Situação')}</div><div class="flex flex-wrap gap-1.5">${SIT.map(s=>chip(f.sit===s[0],`state.form.sit='${s[0]}';renderPhoneViewport()`,L(s[0],s[1]))).join('')}</div><div class="text-[10px] font-bold uppercase text-slate-500">${L('Scope','Alcance')}</div><div class="flex gap-1.5">${['Public','Private'].map(s=>chip(f.scope===s,`state.form.scope='${s}';renderPhoneViewport()`,L(s,s==='Public'?'Público':'Privado'))).join('')}</div>${E('cat')}`)}${mine?'':card(`${TA('desc',L('Description','Descrição'))}${FILE('file',L('Image / video (required)','Imagem / vídeo (obrigatório)'))}`)+B(m?L('Join group issue','Juntar à ocorrência de grupo'):L('Submit','Submeter'),'submitReport()')}`)}
+function submitReport(){const f=state.form,e={};
+ if(!f.cat)e.cat=L('No active category available','Sem categorias ativas');
+ if(!f.desc||f.desc.trim().length<10)e.desc=L('Description required (min. 10 chars)','Descrição obrigatória (mín. 10 car.)');
+ if(!f.file)e.file=L('An image or video is required','É obrigatório anexar imagem ou vídeo');
+ state.err=e;if(Object.keys(e).length)return renderPhoneViewport();
+ const c=state.categories.find(x=>x.id===f.cat),s=SIT.find(x=>x[0]===f.sit),mm=findMatch(),d=f.desc.trim(),p=curLoc(),u=state.user;
+ const off=state.offline?L(' (saved offline – WorkManager uploads media when online)',' (guardado offline – o WorkManager envia o média quando houver rede)'):'';
+ if(mm){const m=mm.i;if(follows(m,u))return renderPhoneViewport();
+  m.followers.push(u.email);m.groupCount++;m.msgs.push({sender:'citizen',time:now().slice(-5),textEn:d+' 📎 '+f.file,textPt:d+' 📎 '+f.file});
+  m.history.push({ts:now(),st:m.status,note:L('Joined group: ','Juntou-se ao grupo: ')+u.name});
+  showToast(L('Joined group issue ','Juntou-se à ocorrência de grupo ')+m.id+off);return setScreen('reg_list')}
+ c.count++;
+ const id='ISS-'+(Math.max(...issuesData.map(i=>+i.id.slice(4)))+1);
+ issuesData.unshift({owner:u&&u.email,followers:[],msgs:[{sender:'citizen',time:now().slice(-5),textEn:d,textPt:d}],id,catEn:c.nameEn,catPt:c.namePt,sitEn:s[0],sitPt:s[1],titleEn:d.slice(0,48),titlePt:d.slice(0,48),status:'Open',scope:f.scope,groupCount:1,lat:p[3],lng:p[4],coords:p[3].toFixed(4)+'° N, '+Math.abs(p[4]).toFixed(4)+'° W',citizen:(u?u.name+' • '+u.phone:'—'),timeAgo:L('now','agora'),color:'sky',icon:c.icon,hasVideo:/\.(mp4|mov|webm)$/i.test(f.file),media:f.file,history:[{ts:now(),st:'Open',note:''}]});
+ showToast(L('Submitted – media uploading via WorkManager','Submetido – média a enviar via WorkManager')+off);
+ setScreen('reg_list')}
+function sProfile(){const u=state.user||state.users.find(x=>x.role===(state.role==='operator'?'operator':'registered')&&x.status==='active'),op=u.role==='operator',f=state.form;
+ if(!('email' in f)){f.email=u.email;f.phone=u.phone}
+ return renderNavigationChrome(`${H(L('Profile','Perfil'),op?L('Municipal operator','Operador municipal'):L('Citizen','Munícipe'))}${card(`${F('n',L('Name (locked)','Nome (bloqueado)'),'text','',true,u.name)}${F('f','NIF ('+L('locked','bloqueado')+')','text','',true,u.nif)}${op?'':F('g',L('Home location (locked)','Georreferenciação (bloqueada)'),'text','',true,u.coords)}${F('email','Email','email')}${F('phone',L('Phone','Telefone'),'tel')}${FILE('photo',L('Photo (optional)','Foto (opcional)'))}${B(L('Save changes','Guardar alterações'),'saveProfile()')}`)}${card(`<div class="flex items-center justify-between text-xs"><span>MFA (Firebase Auth)</span><span class="text-[10px] font-bold text-emerald-700">🔒 ${L('Always on','Sempre ativo')}</span></div>${op?'':`<div class="flex items-center justify-between text-xs"><span>${L('Impact detection','Deteção de impactos')}</span>${TG(u.impact,'state.user.impact=!state.user.impact;renderPhoneViewport()')}</div>${u.impact&&state.perms.bg!=='granted'?`<div class="text-[10px] text-amber-700">${L('Needs background location permission.','Requer permissão de localização em segundo plano.')}</div>`:''}`}${B(L('Permissions','Permissões'),"setScreen('perm')",'bg-slate-100 text-slate-800')}${op?'':B(L('Notifications','Notificações')+(state.unread?' ('+state.unread+')':''),"setScreen('notif')",'bg-slate-100 text-slate-800')}${B(L('Sign out','Terminar sessão'),'logout()','bg-rose-50 text-rose-700')}`)}`)}
+function saveProfile(){const f=state.form,u=state.user,e={},em=(f.email||'').trim().toLowerCase();
+ if(!vEmail(em))e.email=L('Invalid email','Email inválido');else if(u.role==='operator'&&!em.endsWith('@cm-coimbra.pt'))e.email=L('Must be @cm-coimbra.pt','Tem de ser @cm-coimbra.pt');else if(state.users.some(x=>x!==u&&x.email===em))e.email=L('Email already in use','Email já em uso');
+ if(!vPhone(f.phone))e.phone=L('Invalid PT phone number','Nº de telefone inválido');
+ state.err=e;if(Object.keys(e).length)return renderPhoneViewport();
+ u.email=em;u.phone=f.phone;showToast(L('Profile updated','Perfil atualizado'))}
+
+/* ---------- operator ---------- */
+function renderOpPanel(){const list=issuesData.filter(i=>state.opFilter==='All'||i.status===state.opFilter);
+ return renderNavigationChrome(`${H(L('Operational panel','Painel operacional'),esc(state.user?state.user.name:''))}<div class="flex flex-wrap gap-1">${['All',...ORD].map(s=>`<button onclick="state.opFilter='${s}';renderPhoneViewport()" class="px-2 py-1 rounded-full text-[10px] font-semibold ${state.opFilter===s?'bg-sky-700 text-white':'bg-white border border-slate-200'}">${s==='All'?L('All','Todas'):L(s,PT[s])}</button>`).join('')}</div>${list.map(i=>`<div onclick="state.selectedIssueId='${i.id}';setScreen('op_detail')" class="bg-white p-2.5 rounded-2xl border border-slate-200/80 space-y-1 cursor-pointer"><div class="flex justify-between"><b class="text-xs">${i.id} · ${L(i.catEn,i.catPt)}</b>${getStatusBadge(i.status)}</div><div class="text-xs">${esc(L(i.titleEn,i.titlePt))}</div><div class="text-[10px] text-slate-500 font-mono-code">${i.coords}${i.scope==='Private'?' 🔒':''}${i.groupCount>1?' · 👥'+i.groupCount:''}</div></div>`).join('')||`<p class="text-xs text-slate-500">${L('No tickets','Sem ocorrências')}</p>`}`)}
+function sOpDetail(){const i=cur(),st=i.status,open=!['Resolved','Closed'].includes(st);
+ const acts=`<div class="grid grid-cols-3 gap-1.5"><button onclick="askInfo()" class="py-1.5 rounded-xl text-[10px] font-bold bg-amber-100 text-amber-900">${L('Request info','Pedir dados')}</button><button ${st==='In Progress'?'disabled':''} onclick="startWork()" class="py-1.5 rounded-xl text-[10px] font-bold bg-indigo-100 text-indigo-900 disabled:opacity-40">${L('Start work','Iniciar obra')}</button><button ${st!=='In Progress'?'disabled':''} onclick="resolveFlow()" class="py-1.5 rounded-xl text-[10px] font-bold bg-emerald-600 text-white disabled:opacity-40">${L('Resolve + proof','Resolver + prova')}</button></div>${st==='In Progress'?`<button onclick="arrive()" class="w-full py-1.5 rounded-xl bg-slate-100 text-[11px] font-semibold">🚚 ${L('Simulate arriving < 20 m','Simular chegada a < 20 m')}</button>`:''}`;
+ const msgs=i.msgs.map(m=>`<div class="flex ${m.sender==='operator'?'justify-end':''}"><div class="max-w-[85%] px-2.5 py-1.5 rounded-2xl text-[11px] ${m.sender==='operator'?'bg-sky-700 text-white':'bg-slate-100 text-slate-800'}"><b>${m.sender==='operator'?L('Municipal','Câmara'):L('Citizen','Munícipe')}:</b> ${esc(L(m.textEn,m.textPt))}<div class="text-[9px] opacity-70">${m.time}</div></div></div>`).join('')||`<p class="text-[11px] text-slate-500">${L('No messages yet','Ainda sem mensagens')}</p>`;
+ const reply=st==='Closed'?`<p class="text-[10px] text-slate-500">🔒 ${L('Chat locked','Chat bloqueado')}</p>`:`<div class="flex items-center gap-1.5"><input id="op-chat-input" type="text" placeholder="${L('Reply to citizen (no state change)…','Responder ao munícipe (sem mudar estado)…')}" class="flex-1 text-[11px] px-3 py-1.5 rounded-full bg-white border border-slate-200"><button aria-label="Send" onclick="opReply()" class="w-8 h-8 rounded-full bg-sky-700 text-white flex items-center justify-center shrink-0"><span class="material-symbols-rounded text-base">send</span></button></div>`;
+ return renderNavigationChrome(`${back('op_panel',i.id+' · '+esc(L(i.titleEn,i.titlePt)))}${card(`<div class="flex justify-between"><span class="text-xs font-bold">${L(i.catEn,i.catPt)} · ${L(i.sitEn,i.sitPt)}</span>${getStatusBadge(st)}</div><div class="text-[11px] space-y-0.5"><div>📍 <span class="font-mono-code">${i.coords}</span></div><div>👤 ${esc(i.citizen)}</div><div>${i.scope==='Private'?'🔒 '+L('Private','Privada'):'🌐 '+L('Public','Pública')}${i.groupCount>1?' · 👥 '+i.groupCount+' '+L('citizens following','munícipes a acompanhar'):''}</div></div>${mediaThumbs(i)}`)}${card(open?acts:(st==='Closed'?'🔒 '+L('Archived and locked.','Arquivado e bloqueado.'):'⏳ '+L('Resolved – citizen can reopen for 5 days.','Resolvido – o munícipe pode reabrir durante 5 dias.')))}${card(`<div class="text-[10px] font-bold uppercase text-slate-500">${L('Messages','Mensagens')}</div><div class="space-y-1.5 max-h-44 overflow-y-auto phone-scroll">${msgs}</div>${reply}`)}${card(historyList(i))}`)}
+function opReply(){const inp=document.getElementById('op-chat-input'),v=inp&&inp.value.trim(),i=cur();if(!v||i.status==='Closed')return;
+ i.msgs.push({sender:'operator',time:now().slice(-5),textEn:v,textPt:v});pushNotif('forum',i.id+': new message from Municipal Services',i.id+': nova mensagem dos Serviços Camarários');renderPhoneViewport()}
+function askInfo(){openModal(()=>mdl(L('Request information','Pedir informações'),TA('msg',L('Message to citizen','Mensagem ao munícipe')),'doAsk()'))}
+function doAsk(){const m=(state.form.msg||'').trim();if(!m){state.err={msg:L('Write a message','Escreva uma mensagem')};return renderPhoneViewport()}state.chatMessages.push({sender:'operator',time:now().slice(-5),textEn:m,textPt:m});transition(cur(),'Info Requested',m);state.modal=null;renderPhoneViewport()}
+function startWork(){transition(cur(),'In Progress',L('Work started – 20 m geofence active','Início dos trabalhos – geofence 20 m ativa'));renderPhoneViewport()}
+function arrive(){const i=cur();state.geofenceAlertVisible=true;pushNotif('radar',`Municipal team within 20 m of ${i.id} (${i.groupCount} authors notified)`,`Equipa a < 20 m de ${i.id} (${i.groupCount} autores notificados)`)}
+function resolveFlow(){openModal(()=>mdl(L('Resolve with proof','Resolver com prova'),FILE('proof',L('Photo/video of finished work (required)','Foto/vídeo do trabalho concluído (obrigatório)')),'doResolve()'))}
+function doResolve(){if(!state.form.proof){state.err={proof:L('Proof is required','A prova é obrigatória')};return renderPhoneViewport()}const i=cur();i.proof=state.form.proof;transition(i,'Resolved',L('Proof: ','Prova: ')+state.form.proof);state.modal=null;renderPhoneViewport()}
+function renderOpAdmin(){const p=state.users.filter(u=>u.role==='registered'&&u.status==='pending');return renderNavigationChrome(`${H(L('Pending registrations','Registos pendentes'),L('Check name, location and NIF, then activate.','Verifique nome, localização e NIF e ative.'))}${p.map(u=>card(`<b class="text-xs">${esc(u.name)}</b><div class="text-[11px] font-mono-code">NIF ${esc(u.nif)}</div><div class="text-[11px] text-slate-600">📍 ${esc(u.coords)}</div>${B(L('Validate & activate','Validar e ativar'),`activate('${u.email}')`)}`)).join('')||`<p class="text-xs text-slate-500">${L('Nothing pending','Nada pendente')}</p>`}`)}
+function activate(em){state.users.find(x=>x.email===em).status='active';showToast(L('Citizen activated','Munícipe ativado'));renderPhoneViewport()}
+function sOpCats(){return renderNavigationChrome(`<div class="flex justify-between items-center pt-1">${H(L('Problem types','Tipologias'))}<button onclick="editCat(-1)" class="px-3 py-1.5 rounded-xl bg-sky-700 text-white text-[11px] font-semibold">+ ${L('New','Nova')}</button></div>${state.categories.map((c,k)=>card(`<div class="flex items-center gap-2"><span class="material-symbols-rounded ${c.active?'text-sky-700':'text-slate-400'}">${c.icon}</span><div class="flex-1"><div class="text-xs font-semibold ${c.active?'':'line-through text-slate-400'}">${L(c.nameEn,c.namePt)}</div><div class="text-[10px] text-slate-500">${c.count} ${L('tickets','ocorrências')}</div></div><button onclick="editCat(${k})" aria-label="Edit" class="text-sky-700"><span class="material-symbols-rounded">edit</span></button>${TG(c.active,`state.categories[${k}].active=!state.categories[${k}].active;renderPhoneViewport()`)}</div>`)).join('')}<p class="text-[10px] text-slate-500">${L('Citizens can only open tickets in active types.','Os munícipes só podem abrir ocorrências em tipologias ativas.')}</p>`)}
+function editCat(k){const c=state.categories[k];openModal(()=>mdl(k<0?L('New type','Nova tipologia'):L('Edit type','Editar tipologia'),`${F('en','Name (EN)')}${F('pt','Nome (PT)')}<select onchange="state.form.icon=this.value" class="w-full text-xs p-2 border rounded-xl">${ICONS.map(x=>`<option ${state.form.icon===x?'selected':''}>${x}</option>`).join('')}</select>`,`saveCat(${k})`),c?{en:c.nameEn,pt:c.namePt,icon:c.icon}:{icon:'report'})}
+function saveCat(k){const f=state.form,e={};if(!(f.en||'').trim())e.en=L('Required','Obrigatório');if(!(f.pt||'').trim())e.pt=L('Required','Obrigatório');state.err=e;if(Object.keys(e).length)return renderPhoneViewport();
+ if(k<0)state.categories.push({id:'cat'+Date.now(),nameEn:f.en.trim(),namePt:f.pt.trim(),icon:f.icon||'report',active:true,count:0});else Object.assign(state.categories[k],{nameEn:f.en.trim(),namePt:f.pt.trim(),icon:f.icon});
+ state.modal=null;renderPhoneViewport()}
+
+/* ---------- simulators + sidebar ---------- */
+function triggerImpactBanner(){if(state.role!=='registered')setRole('registered');if(!state.user.impact){showToast(L('Impact detection is OFF in profile','Deteção de impactos desativada no perfil'));return}state.screen='reg_list';state.impactAlertVisible=true;renderAll();showToast(L('Accelerometer Z-axis spike simulated!','Pico no eixo vertical simulado!'))}
+function simOutside(){state.outside=!state.outside;state.role='anonymous';state.user=null;state.screen='anon_dash';renderAll();showToast(state.outside?'Simulating > 10 km':'Back inside 10 km')}
+function sim24(){const i=issuesData.find(x=>x.status==='Resolved');if(!i)return showToast('No resolved ticket');pushNotif('timer',i.id+': 24h left before it closes',i.id+': faltam 24h para o fecho')}
+function simClose(){const i=issuesData.find(x=>x.status==='Resolved');if(!i)return showToast('No resolved ticket');transition(i,'Closed',L('Auto-archived after 5 days','Arquivado automaticamente após 5 dias'));renderPhoneViewport()}
+const mk=(id,en,pt,icon)=>({id,labelEn:en,labelPt:pt,icon});
+roleConfigs.anonymous.screens.push(mk('auth_login','0A. Login','0A. Autenticação','login'),mk('auth_mfa','0B. MFA code','0B. Código MFA','pin'),mk('auth_recover','0C. Credential recovery','0C. Recuperação de credenciais','lock_reset'),mk('signup_reg','0D. Citizen registration','0D. Registo de munícipe','person_add'),mk('signup_op','0E. Operator registration','0E. Registo de operador','badge'),mk('pending','0F. Registration pending','0F. Registo pendente','hourglass_top'),mk('perm','0G. Permissions','0G. Permissões','shield'));
+roleConfigs.registered.screens.push(mk('anon_dash','2E. Home (public dashboard)','2E. Início (painel público)','dashboard'),mk('anon_list','2F. Public feed','2F. Ocorrências públicas','public'),mk('notif','2G. Notifications','2G. Notificações','notifications'));
+roleConfigs.operator.screens.push(mk('op_detail','3C. Ticket: info request, proof, history','3C. Ticket: pedido, prova, histórico','assignment'),mk('op_cats','3D. Problem types (CRUD)','3D. Tipologias (CRUD)','category'),mk('op_profile','3E. Operator profile','3E. Perfil do operador','person'));
+window.addEventListener('DOMContentLoaded',()=>{const p=document.getElementById('offline-sim-btn').parentElement;const b=(fn,t)=>`<button onclick="${fn}" class="text-xs px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 font-medium">${t}</button>`;p.insertAdjacentHTML('beforeend',b('simOutside()','Outside 10 km')+b('sim24()','24h-left alert')+b('simClose()','+5 days (close)'))});
+</script>
+
+<script>
+/* v3: citizen chat only opens an info exchange from "Open" (never pushes an ongoing intervention back) */
+function sendChatMessage(){const inp=document.getElementById('chat-input'),v=inp&&inp.value.trim(),i=cur();if(!v||i.status==='Closed')return;
+ i.msgs.push({sender:'citizen',time:now().slice(-5),textEn:v,textPt:v});
+ if(i.status==='Open')transition(i,'Info Requested',L('Citizen asked for clarification','Munícipe pediu esclarecimentos'));
+ showToast(L('Municipal services notified','Serviços camarários notificados'));renderPhoneViewport()}
+function triggerGeofenceBanner(){if(state.role!=='registered')setRole('registered');const i=issuesData.find(x=>x.status==='In Progress'&&follows(x,state.user));
+ if(!i)return showToast(L('None of your tickets is In Progress','Nenhuma ocorrência sua está Em Resolução'));
+ state.selectedIssueId=i.id;state.geofenceAlertVisible=true;setScreen('reg_detail');pushNotif('radar','Municipal team within 20 m of '+i.id,'Equipa camarária a < 20 m de '+i.id)}
+/* v3: first launch asks for location (needed for the anonymous 10 km check) */
+window.addEventListener('DOMContentLoaded',()=>{if(!state.perms.loc){state.screen='perm';renderAll()}});
+</script>
+</body>
+</html>

@@ -113,4 +113,33 @@
     <string name="error_login">E-mail ou palavra-passe errados</string>
     <string name="error_network">Sem ligação à internet</string>
     <string name="error_generic">Ocorreu um erro. Tente novamente.</string>
+
+    <!-- Perfil anónimo: dashboard e área de 10 km -->
+    <string name="nav_dashboard">Painel</string>
+    <string name="nav_incidents">Ocorrências</string>
+    <string name="dashboard_area">Raio de 10 km · Praça da República</string>
+    <string name="kpi_avg_repair">Tempo médio de reparação</string>
+    <string name="kpi_total">Total de ocorrências</string>
+    <string name="kpi_active">Ativas</string>
+    <string name="kpi_days">%1$.1f dias</string>
+    <string name="kpi_percent">%1$d%%</string>
+    <string name="dashboard_public_title">Ocorrências públicas ativas</string>
+    <string name="action_see_all">Ver todas</string>
+    <string name="dashboard_privacy">Nas ocorrências públicas, o autor e a localização exata ficam ocultos.</string>
+    <string name="area_checking">A verificar a sua localização…</string>
+    <string name="area_permission_title">Localização necessária</string>
+    <string name="area_permission_text">Sem sessão iniciada, o CityFix só está disponível num raio de 10 km da Praça da República. Permita o acesso à localização para confirmarmos onde está.</string>
+    <string name="action_allow_location">Permitir localização</string>
+    <string name="action_open_settings">Abrir definições</string>
+    <string name="area_outside_title">Fora da área de serviço</string>
+    <string name="area_outside_text">Está a %1$.1f km da Praça da República. Sem sessão iniciada, o CityFix só está disponível num raio de 10 km.</string>
+    <string name="area_unavailable_title">Localização indisponível</string>
+    <string name="area_unavailable_text">Não foi possível obter a sua localização. Confirme que a localização está ligada e tente novamente.</string>
+    <string name="action_retry">Tentar novamente</string>
+    <string name="area_sign_in_hint">Com sessão iniciada pode usar o CityFix em qualquer lugar.</string>
+    <string name="label_address">Morada: %1$s</string>
+    <string name="label_approximate_area">Zona aproximada</string>
+    <string name="author_hidden">Autor oculto</string>
+    <string name="selected_location">Localização selecionada</string>
+    <string name="label_lat_lng">Lat %1$.4f, Lng %2$.4f</string>
 </resources>

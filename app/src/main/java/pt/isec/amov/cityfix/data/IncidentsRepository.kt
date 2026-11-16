@@ -12,6 +12,7 @@ import androidx.work.workDataOf
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -25,7 +26,7 @@ import java.util.concurrent.TimeUnit
  * As regras de segurança (passo 4.k) só deixam fazer estas três consultas.
  */
 sealed interface IncidentQuery {
-    // Públicos e ainda não encerrados (anónimo, e separador "Públicas" do munícipe)
+    // Públicos e ativos: Aberto, Pedido de Informações ou Em Resolução (anónimo, dashboard e separador "Públicas")
     data object PublicActive : IncidentQuery
 
     // Os do próprio munícipe
@@ -41,17 +42,22 @@ sealed interface IncidentQuery {
  * e aceita leituras e escritas sem rede, que sincroniza quando a rede volta.
  * Os ViewModels continuam a só conhecer esta classe.
  */
-class IncidentsRepository(private val context: Context) {
+class IncidentsRepository(
+    private val context: Context,
+    private val statsRepository: StatsRepository
+) {
 
-    private val incidentsCollection = Firebase.firestore.collection("incidents")
+    private val db = Firebase.firestore
+    private val incidentsCollection = db.collection("incidents")
 
-    // Última lista recebida do Firestore (para getIncidentById, que é síncrono)
-    private var cachedIncidents: List<Incident> = emptyList()
+    // Incidentes recebidos de todas as consultas ativas, por ID (para getIncidentById, que é síncrono).
+    // Um mapa e não "a última lista": o dashboard e a lista têm consultas diferentes ao mesmo tempo.
+    private val cachedIncidents = ConcurrentHashMap<String, Incident>()
 
     /**
-     * Procura na última lista recebida (síncrono). Usado pelo EditIncidentViewModel.
+     * Procura nos incidentes já recebidos (síncrono). Usado pelo EditIncidentViewModel.
      */
-    fun getIncidentById(id: String): Incident? = cachedIncidents.find { it.id == id }
+    fun getIncidentById(id: String): Incident? = cachedIncidents[id]
 
     /**
      * Lista de incidentes em tempo real: um Flow que emite uma lista nova sempre que
@@ -62,7 +68,7 @@ class IncidentsRepository(private val context: Context) {
         val firestoreQuery = when (query) {
             IncidentQuery.PublicActive -> incidentsCollection
                 .whereEqualTo("scope", Scope.PUBLIC.name)
-                .whereIn("status", IncidentStatus.entries.filter { it != IncidentStatus.CLOSED }.map { it.name })
+                .whereIn("status", IncidentStatus.entries.filter { it.isActive }.map { it.name })
             is IncidentQuery.ByUser -> incidentsCollection.whereEqualTo("userId", query.uid)
             IncidentQuery.All -> incidentsCollection
         }
@@ -73,7 +79,7 @@ class IncidentsRepository(private val context: Context) {
                 return@addSnapshotListener
             }
             val list = snapshot?.documents?.mapNotNull { it.toIncident() } ?: emptyList()
-            cachedIncidents = list
+            list.forEach { cachedIncidents[it.id] = it }
             trySend(list)
         }
         awaitClose { registration.remove() }
@@ -81,18 +87,26 @@ class IncidentsRepository(private val context: Context) {
 
     /**
      * Cria ou atualiza o incidente (o ID do documento é o ID do incidente).
+     * Se for novo, atualiza também os indicadores (stats/global) no mesmo WriteBatch.
      * Não se espera pela resposta do servidor (sem await): sem rede, a escrita fica na fila
      * local do Firestore e o snapshot listener mostra-a logo na lista.
      */
-    fun saveIncident(incident: Incident) {
-        incidentsCollection.document(incident.id).set(incident.toFirestoreMap())
+    fun saveIncident(incident: Incident, isNew: Boolean = false) {
+        val batch = db.batch()
+        batch.set(incidentsCollection.document(incident.id), incident.toFirestoreMap())
+        if (isNew) statsRepository.addCreated(batch)
+        batch.commit()
     }
 
     /**
      * Apaga o documento e, se já tinham sido enviadas, as imagens no Storage.
      */
     fun deleteIncident(incident: Incident) {
-        incidentsCollection.document(incident.id).delete()
+        val batch = db.batch()
+        batch.delete(incidentsCollection.document(incident.id))
+        statsRepository.addDeleted(batch, incident)
+        batch.commit()
+        cachedIncidents.remove(incident.id)
         deleteRemoteMedia(incident)
     }
 

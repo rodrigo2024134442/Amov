@@ -48,10 +48,16 @@ fun IncidentCard(
                         text = incident.title,
                         style = MaterialTheme.typography.titleLarge
                     )
+                    // O enunciado (I.1.B) pede categoria, situação e miniatura na lista
                     Text(
-                        text = "${incident.category} · ${incident.status.label()}",
+                        text = "${incident.category} · ${incident.situation.label()}",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(top = 4.dp)
+                    )
+                    Text(
+                        text = incident.status.label(),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -62,8 +68,7 @@ fun IncidentCard(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = stringResource(R.string.label_situation, incident.situation.label()) +
-                                " · " + incident.scope.label(),
+                        text = stringResource(R.string.label_scope, incident.scope.label()),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

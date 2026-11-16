@@ -22,7 +22,13 @@ enum class Scope { PUBLIC, PRIVATE }
  * Estados do ciclo de vida do ticket (enunciado, secção II).
  */
 @Serializable
-enum class IncidentStatus { OPEN, INFO_REQUESTED, IN_PROGRESS, RESOLVED, CLOSED }
+enum class IncidentStatus {
+    OPEN, INFO_REQUESTED, IN_PROGRESS, RESOLVED, CLOSED;
+
+    // "Ativa" = ainda à espera de resolução: aparece na lista pública e conta para a % de ativas
+    val isActive: Boolean
+        get() = this == OPEN || this == INFO_REQUESTED || this == IN_PROGRESS
+}
 
 /**
  * Estado de sincronização com a nuvem (slide "FixIt Project Bridge" da aula P08):

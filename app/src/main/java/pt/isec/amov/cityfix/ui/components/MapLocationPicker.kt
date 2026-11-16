@@ -9,6 +9,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -16,6 +17,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
+import pt.isec.amov.cityfix.R
 import pt.isec.amov.cityfix.utils.LocationUtils
 
 @Composable
@@ -27,6 +29,7 @@ fun MapLocationPicker(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val markerTitle = stringResource(R.string.selected_location)
     val defaultPos = LatLng(initialLat ?: 40.2056, initialLng ?: -8.4195) // Coimbra, PT
     val cameraState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(defaultPos, 15f)
@@ -52,7 +55,7 @@ fun MapLocationPicker(
             }
             Marker(
                 state = markerState,
-                title = "Localização Selecionada"
+                title = markerTitle
             )
         }
     }
