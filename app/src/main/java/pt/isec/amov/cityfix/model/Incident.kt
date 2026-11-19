@@ -56,6 +56,14 @@ data class Incident(
     // Data/hora em que a ocorrência passou a "Resolvido" (utilizado para validar o limite de 5 dias para reabertura)
     val resolvedAt: Long? = null,
 
+    // Histórico de mudanças de estado, por ordem (enunciado I.3.E: transição de estados com timestamp)
+    val history: List<StatusChange> = emptyList(),
+
+    // Fotografia comprovativa da resolução (enunciado II.4): caminho local no telemóvel do operador
+    // e, depois do envio pelo ProofUploadWorker, o endereço no Firebase Storage
+    val proofPath: String? = null,
+    val proofUrl: String? = null,
+
     // Estado de sincronização com a nuvem (PENDING_SYNC enquanto só existe no dispositivo)
     val syncStatus: SyncStatus = SyncStatus.PENDING_SYNC
 ) {
@@ -66,4 +74,14 @@ data class Incident(
     // Miniatura a mostrar na lista: a da nuvem ou, antes do envio, a primeira imagem local
     val displayThumbnail: String?
         get() = thumbnailUrl ?: mediaPaths.firstOrNull()
+
+    // Prova de resolução a mostrar: a da nuvem ou, antes do envio, a local
+    val displayProof: String?
+        get() = proofUrl ?: proofPath
+
+    // Histórico completo para mostrar. As ocorrências criadas antes do histórico existir
+    // não têm a entrada "Aberto": é acrescentada com a data de criação.
+    val timeline: List<StatusChange>
+        get() = if (history.firstOrNull()?.status == IncidentStatus.OPEN) history
+        else listOf(StatusChange(IncidentStatus.OPEN, timestamp, userId)) + history
 }

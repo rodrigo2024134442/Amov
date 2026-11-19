@@ -8,6 +8,7 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -25,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -35,11 +37,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import pt.isec.amov.cityfix.data.LocationRepository
+import pt.isec.amov.cityfix.model.IncidentStatus
 import pt.isec.amov.cityfix.model.Session
 import pt.isec.amov.cityfix.model.UserRole
 import pt.isec.amov.cityfix.ui.components.AppBottomBar
 import pt.isec.amov.cityfix.ui.components.AppNavigationRail
 import pt.isec.amov.cityfix.ui.components.MainTopAppBar
+import pt.isec.amov.cityfix.ui.components.ResolveProofDialog
+import pt.isec.amov.cityfix.ui.components.TicketSection
 import pt.isec.amov.cityfix.ui.components.TopLevelDestination
 import pt.isec.amov.cityfix.ui.navigation.CategoriesRoute
 import pt.isec.amov.cityfix.ui.navigation.DashboardRoute
@@ -65,6 +70,7 @@ import pt.isec.amov.cityfix.ui.screens.RegisterScreen
 import pt.isec.amov.cityfix.ui.screens.ShowScreen
 import pt.isec.amov.cityfix.ui.screens.ValidateUsersScreen
 import pt.isec.amov.cityfix.ui.theme.CityFixTheme
+import pt.isec.amov.cityfix.utils.FileUtils
 import pt.isec.amov.cityfix.viewmodel.AreaState
 import pt.isec.amov.cityfix.viewmodel.DashboardViewModel
 import pt.isec.amov.cityfix.viewmodel.DashboardViewModelFactory
@@ -83,6 +89,8 @@ import pt.isec.amov.cityfix.viewmodel.RegisterViewModel
 import pt.isec.amov.cityfix.viewmodel.RegisterViewModelFactory
 import pt.isec.amov.cityfix.viewmodel.SessionViewModel
 import pt.isec.amov.cityfix.viewmodel.SessionViewModelFactory
+import pt.isec.amov.cityfix.viewmodel.TicketViewModel
+import pt.isec.amov.cityfix.viewmodel.TicketViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
@@ -290,15 +298,79 @@ class MainActivity : ComponentActivity() {
                         val incident = incidents.find { it.id == route.incidentId }
                             ?: recentPublic.find { it.id == route.incidentId }
                         val isOwner = user != null && incident?.userId == user.uid
-                        val showLocation = isOwner || user?.role == UserRole.OPERATOR
+                        val isOperator = user?.role == UserRole.OPERATOR
+                        val showLocation = isOwner || isOperator
+                        // Ciclo de vida desta ocorrência (associado a esta rota: sai do detalhe, é destruído)
+                        val ticketViewModel: TicketViewModel = viewModel(
+                            factory = TicketViewModelFactory(
+                                route.incidentId, app.repository, app.messagesRepository, app.authRepository
+                            )
+                        )
+                        val author by ticketViewModel.author.collectAsStateWithLifecycle()
+                        val proofPath by ticketViewModel.proofPath.collectAsStateWithLifecycle()
+                        val resolveDialogOpen by ticketViewModel.resolveDialogOpen.collectAsStateWithLifecycle()
+                        val resolveNote by ticketViewModel.resolveNote.collectAsStateWithLifecycle()
+                        // Galeria e câmara da prova de resolução, registadas aqui (a rota existe sempre),
+                        // e não dentro do diálogo: se o Android recriar a app enquanto a câmara está aberta,
+                        // o resultado chega na mesma e o diálogo reaparece logo com a fotografia.
+                        val context = LocalContext.current
+                        val proofGallery = rememberLauncherForActivityResult(
+                            ActivityResultContracts.PickVisualMedia()
+                        ) { uri ->
+                            uri?.let { FileUtils.copyUriToInternalStorage(context, it) }
+                                ?.let(ticketViewModel::onProofPicked)
+                        }
+                        val proofCamera = rememberLauncherForActivityResult(
+                            ActivityResultContracts.TakePicture()
+                        ) { success -> ticketViewModel.onCameraResult(success) }
+                        if (resolveDialogOpen && isOperator) {
+                            ResolveProofDialog(
+                                proofPath = proofPath,
+                                note = resolveNote,
+                                onNoteChange = ticketViewModel::onResolveNoteChange,
+                                onPickGallery = {
+                                    proofGallery.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                },
+                                onTakePhoto = {
+                                    val (file, uri) = FileUtils.createTempImageFile(context)
+                                    ticketViewModel.onCameraLaunched(file.absolutePath)
+                                    proofCamera.launch(uri)
+                                },
+                                // Enquanto a ocorrência volta a carregar (depois da recriação), espera
+                                canConfirm = incident != null,
+                                onConfirm = { incident?.let { ticketViewModel.resolve(it) } },
+                                onDismiss = ticketViewModel::discardProof
+                            )
+                        }
                         ShowScreen(
                             incident = incident,
-                            canEdit = isOwner,
+                            // O autor só edita/apaga enquanto ninguém pegou na ocorrência
+                            canEdit = isOwner && incident?.status == IncidentStatus.OPEN,
                             showLocation = showLocation,
                             // Os outros (anónimo e munícipes que não são o autor) veem só a zona aproximada
                             showApproximateMap = !showLocation,
                             onEditClick = { id -> navController.navigate(EditIncidentRoute(id)) },
-                            onDeleteClick = { id -> viewModel.deleteIncident(id) { navController.popBackStack() } }
+                            onDeleteClick = { id -> viewModel.deleteIncident(id) { navController.popBackStack() } },
+                            extraContent = {
+                                // Ciclo de vida: só o autor e o operador (enunciado I.2.E e I.3.E)
+                                if (incident != null && (isOwner || isOperator)) {
+                                    TicketSection(
+                                        incident = incident,
+                                        isOperator = isOperator,
+                                        author = author,
+                                        onRequestInfo = { question -> ticketViewModel.requestInfo(incident, question) },
+                                        onStartWork = { ticketViewModel.startWork(incident) },
+                                        onOpenResolve = ticketViewModel::openResolveDialog,
+                                        partB = {
+                                            // PARTE B (Marco): secção de mensagens e botão "Reabrir" aqui.
+                                            // Já fica no sítio do mockup: operador antes do histórico,
+                                            // autor depois do cartão do histórico.
+                                        }
+                                    )
+                                }
+                            }
                         )
                     }
                     composable<EditIncidentRoute> { backStack ->

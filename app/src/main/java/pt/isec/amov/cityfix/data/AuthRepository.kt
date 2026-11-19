@@ -99,6 +99,12 @@ class AuthRepository(context: Context) {
     val currentUid: String?
         get() = auth.currentUser?.uid
 
+    /**
+     * Perfil de outro utilizador em tempo real (o operador vê os contactos do autor de uma ocorrência).
+     * As regras só deixam o operador ler perfis alheios.
+     */
+    fun observeUserProfile(uid: String): Flow<User?> = observeUser(uid)
+
     private fun observeUser(uid: String): Flow<User?> = callbackFlow {
         val registration = usersCollection.document(uid).addSnapshotListener { snapshot, error ->
             if (error != null) {

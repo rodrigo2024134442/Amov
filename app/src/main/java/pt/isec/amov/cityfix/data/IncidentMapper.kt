@@ -5,6 +5,7 @@ import pt.isec.amov.cityfix.model.Incident
 import pt.isec.amov.cityfix.model.IncidentStatus
 import pt.isec.amov.cityfix.model.Scope
 import pt.isec.amov.cityfix.model.Situation
+import pt.isec.amov.cityfix.model.StatusChange
 import pt.isec.amov.cityfix.model.SyncStatus
 
 // Conversão entre o Incident (modelo puro, sem Firebase) e os documentos do Firestore.
@@ -31,8 +32,33 @@ fun Incident.toFirestoreMap(): Map<String, Any?> = mapOf(
     "status" to status.name,
     "timestamp" to timestamp,
     "resolvedAt" to resolvedAt,
+    "history" to history.map { it.toFirestoreMap() },
+    "proofPath" to proofPath,
+    "proofUrl" to proofUrl,
     "syncStatus" to syncStatus.name
 )
+
+/**
+ * StatusChange -> Map (uma entrada da lista "history" do documento).
+ */
+fun StatusChange.toFirestoreMap(): Map<String, Any?> = mapOf(
+    "status" to status.name,
+    "timestamp" to timestamp,
+    "byUid" to byUid,
+    "note" to note
+)
+
+// Entrada do histórico lida do Firestore; null se estiver estragada
+private fun Map<*, *>.toStatusChange(): StatusChange? = try {
+    StatusChange(
+        status = IncidentStatus.valueOf(this["status"] as? String ?: return null),
+        timestamp = (this["timestamp"] as? Number)?.toLong() ?: return null,
+        byUid = this["byUid"] as? String ?: "",
+        note = this["note"] as? String
+    )
+} catch (_: IllegalArgumentException) {
+    null
+}
 
 /**
  * Documento -> Incident. Devolve null se faltar um campo obrigatório ou um enum for inválido
@@ -57,6 +83,12 @@ fun DocumentSnapshot.toIncident(): Incident? = try {
         status = IncidentStatus.valueOf(getString("status") ?: IncidentStatus.OPEN.name),
         timestamp = getLong("timestamp") ?: 0L,
         resolvedAt = getLong("resolvedAt"),
+        history = (get("history") as? List<*>)
+            ?.mapNotNull { (it as? Map<*, *>)?.toStatusChange() }
+            ?.sortedBy { it.timestamp }
+            ?: emptyList(),
+        proofPath = getString("proofPath"),
+        proofUrl = getString("proofUrl"),
         syncStatus = SyncStatus.valueOf(getString("syncStatus") ?: SyncStatus.PENDING_SYNC.name)
     )
 } catch (_: IllegalArgumentException) {

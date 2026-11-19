@@ -162,6 +162,10 @@ class EditIncidentViewModel(
             status = base?.status ?: IncidentStatus.OPEN,
             timestamp = base?.timestamp ?: System.currentTimeMillis(),
             resolvedAt = base?.resolvedAt,
+            // O histórico e a prova são do ciclo de vida: a edição pelo autor não lhes toca
+            history = base?.history ?: emptyList(),
+            proofPath = base?.proofPath,
+            proofUrl = base?.proofUrl,
             syncStatus = kept?.syncStatus ?: SyncStatus.PENDING_SYNC
         )
         repository.saveIncident(incident, isNew = base == null)

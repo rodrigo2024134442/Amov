@@ -3,6 +3,7 @@ package pt.isec.amov.cityfix.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,6 +55,8 @@ import pt.isec.amov.cityfix.ui.components.label
  * As coordenadas e o mapa Google Maps só aparecem ao autor e ao operador (Ficha 10).
  * Os outros (anónimo, enunciado I.1.C) veem só uma zona aproximada: mapa com zoom afastado,
  * sem marcador, com as coordenadas arredondadas e sem poder aproximar.
+ * [extraContent] é um espaço no fim do ecrã para as secções do ciclo de vida: a MainActivity
+ * põe aqui o TicketSection (Parte A) e a secção de mensagens (Parte B), sem mexer neste ficheiro.
  */
 @Composable
 fun ShowScreen(
@@ -63,7 +66,8 @@ fun ShowScreen(
     showApproximateMap: Boolean,
     onEditClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    extraContent: @Composable ColumnScope.() -> Unit = {}
 ) {
     if (incident == null) {
         Box(
@@ -198,6 +202,7 @@ fun ShowScreen(
                     ApproximateAreaMap(incident.latitude, incident.longitude)
                 }
             }
+            extraContent()
         }
     }
 }

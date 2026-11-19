@@ -10,15 +10,22 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import pt.isec.amov.cityfix.model.Incident
+import pt.isec.amov.cityfix.model.IncidentLifecycle
 import pt.isec.amov.cityfix.model.IncidentStatus
 import pt.isec.amov.cityfix.model.Scope
+import pt.isec.amov.cityfix.model.StatusChange
+import pt.isec.amov.cityfix.model.UserRole
 import java.util.concurrent.TimeUnit
 
 /**
@@ -132,6 +139,102 @@ class IncidentsRepository(
             .build()
         WorkManager.getInstance(context)
             .enqueueUniqueWork("upload_$incidentId", ExistingWorkPolicy.REPLACE, request)
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Ciclo de vida do ticket (enunciado I.3.E e II)
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * FUNÇÃO PARTILHADA (Parte A e Parte B): muda o estado da ocorrência e acrescenta a entrada
+     * ao histórico (estado, data/hora, quem, nota). A Parte B usa-a no pedido de esclarecimento
+     * do munícipe (OPEN -> INFO_REQUESTED) e na reabertura (RESOLVED -> OPEN, com a justificação na nota).
+     * Transições inválidas (ver IncidentLifecycle) são ignoradas e devolvem false.
+     * Também atualiza os indicadores do dashboard no mesmo WriteBatch (reabertura).
+     */
+    fun changeStatus(incident: Incident, newStatus: IncidentStatus, note: String? = null): Boolean =
+        applyStatusChange(incident, newStatus, note, byUid = currentUid())
+
+    /**
+     * O operador declara a ocorrência resolvida, com a fotografia comprovativa (enunciado II.4).
+     * A fotografia é enviada para o Storage pelo ProofUploadWorker quando houver rede.
+     */
+    fun resolve(incident: Incident, proofPath: String, note: String? = null): Boolean {
+        val done = applyStatusChange(incident, IncidentStatus.RESOLVED, note, byUid = currentUid(), proofPath = proofPath)
+        if (done) scheduleProofUpload(incident.id)
+        return done
+    }
+
+    /**
+     * Fecho automático (enunciado II.5): passa a Encerrado as ocorrências resolvidas há mais de 5 dias.
+     * Corre no AutoCloseWorker. O operador fecha todas; o munícipe só as suas (as regras não deixam mais).
+     * Lê do servidor: sem rede falha e o WorkManager volta a tentar.
+     */
+    suspend fun closeExpiredResolved(now: Long = System.currentTimeMillis()): Int {
+        val uid = Firebase.auth.currentUser?.uid ?: return 0
+        val role = db.collection("users").document(uid).get(Source.SERVER).await().getString("role")
+        var query = incidentsCollection.whereEqualTo("status", IncidentStatus.RESOLVED.name)
+        if (role != UserRole.OPERATOR.name) query = query.whereEqualTo("userId", uid)
+        val expired = query.get(Source.SERVER).await().documents
+            .mapNotNull { it.toIncident() }
+            .filter { incident -> IncidentLifecycle.closesAt(incident)?.let { it <= now } == true }
+        expired.forEach { applyStatusChange(it, IncidentStatus.CLOSED, note = null, byUid = StatusChange.SYSTEM) }
+        return expired.size
+    }
+
+    private fun currentUid(): String = Firebase.auth.currentUser?.uid.orEmpty()
+
+    /**
+     * Grava a mudança com update() (só os campos do ciclo de vida, para não apagar o que outro
+     * utilizador tenha mudado entretanto) e arrayUnion() no histórico. Funciona sem rede.
+     */
+    private fun applyStatusChange(
+        incident: Incident,
+        newStatus: IncidentStatus,
+        note: String?,
+        byUid: String,
+        proofPath: String? = null
+    ): Boolean {
+        if (!IncidentLifecycle.canTransition(incident.status, newStatus)) {
+            Log.w(TAG, "Transição inválida ${incident.status} -> $newStatus em ${incident.id}")
+            return false
+        }
+        val now = System.currentTimeMillis()
+        val change = StatusChange(newStatus, now, byUid, note?.trim()?.ifEmpty { null })
+        val updates = mutableMapOf<String, Any?>(
+            "status" to newStatus.name,
+            "history" to FieldValue.arrayUnion(change.toFirestoreMap())
+        )
+        val batch = db.batch()
+        when {
+            newStatus == IncidentStatus.RESOLVED -> {
+                updates["resolvedAt"] = now
+                updates["proofPath"] = proofPath
+                updates["proofUrl"] = null
+                statsRepository.addResolved(batch, now - incident.timestamp)
+            }
+            // Reabertura: deixa de contar como resolvida
+            incident.status == IncidentStatus.RESOLVED && newStatus == IncidentStatus.OPEN -> {
+                incident.resolvedAt?.let { statsRepository.addReopened(batch, it - incident.timestamp) }
+                updates["resolvedAt"] = null
+            }
+        }
+        batch.update(incidentsCollection.document(incident.id), updates)
+        batch.commit()
+        return true
+    }
+
+    /**
+     * Envio da fotografia de prova pelo WorkManager, só com rede (como as imagens da ocorrência).
+     */
+    private fun scheduleProofUpload(incidentId: String) {
+        val request = OneTimeWorkRequestBuilder<ProofUploadWorker>()
+            .setInputData(workDataOf(ProofUploadWorker.KEY_INCIDENT_ID to incidentId))
+            .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+            .build()
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork("proof_$incidentId", ExistingWorkPolicy.REPLACE, request)
     }
 
     companion object {

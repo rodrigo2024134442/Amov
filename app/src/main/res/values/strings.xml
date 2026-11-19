@@ -143,4 +143,26 @@
     <string name="author_hidden">Author hidden</string>
     <string name="selected_location">Selected location</string>
     <string name="label_lat_lng">Lat %1$.4f, Lng %2$.4f</string>
+
+    <!-- Ciclo de vida do ticket (Parte A) -->
+    <string name="history_title">History</string>
+    <string name="history_automatic">Closed automatically</string>
+    <string name="reopen_until">Resolved – the citizen can reopen until %1$s.</string>
+    <string name="closed_locked">Closed – archived and locked.</string>
+    <string name="proof_title">Resolution proof attached by the municipal team</string>
+    <string name="proof_photo">Photo of the completed work</string>
+    <string name="author_loading">Loading the author\'s contacts…</string>
+    <string name="author_unknown">Author profile not found.</string>
+    <string name="action_call">Call</string>
+    <string name="action_request_info">Request info</string>
+    <string name="action_start_work">Start work</string>
+    <string name="action_resolve">Resolve + proof</string>
+    <string name="action_send">Send</string>
+    <string name="request_info_title">Request information</string>
+    <string name="request_info_hint">What do you need to know?</string>
+    <string name="start_work_title">Start work?</string>
+    <string name="start_work_text">The author will see this incident as In Progress.</string>
+    <string name="resolve_title">Resolve incident</string>
+    <string name="resolve_text">Attach a photo of the completed work. The author can reopen the incident within 5 days.</string>
+    <string name="resolve_note_hint">Note (optional)</string>
 </resources>

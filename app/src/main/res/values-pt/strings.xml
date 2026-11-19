@@ -142,4 +142,26 @@
     <string name="author_hidden">Autor oculto</string>
     <string name="selected_location">Localização selecionada</string>
     <string name="label_lat_lng">Lat %1$.4f, Lng %2$.4f</string>
+
+    <!-- Ciclo de vida do ticket (Parte A) -->
+    <string name="history_title">Histórico</string>
+    <string name="history_automatic">Encerrada automaticamente</string>
+    <string name="reopen_until">Resolvido – o munícipe pode reabrir até %1$s.</string>
+    <string name="closed_locked">Encerrado – arquivado e bloqueado.</string>
+    <string name="proof_title">Prova de resolução anexada pela equipa camarária</string>
+    <string name="proof_photo">Fotografia do trabalho concluído</string>
+    <string name="author_loading">A carregar os contactos do autor…</string>
+    <string name="author_unknown">Perfil do autor não encontrado.</string>
+    <string name="action_call">Ligar</string>
+    <string name="action_request_info">Pedir dados</string>
+    <string name="action_start_work">Iniciar obra</string>
+    <string name="action_resolve">Resolver + prova</string>
+    <string name="action_send">Enviar</string>
+    <string name="request_info_title">Pedir informações</string>
+    <string name="request_info_hint">O que precisa de saber?</string>
+    <string name="start_work_title">Iniciar os trabalhos?</string>
+    <string name="start_work_text">O autor passa a ver esta ocorrência como Em Resolução.</string>
+    <string name="resolve_title">Resolver ocorrência</string>
+    <string name="resolve_text">Anexe uma fotografia do trabalho concluído. O autor pode reabrir a ocorrência durante 5 dias.</string>
+    <string name="resolve_note_hint">Nota (opcional)</string>
 </resources>
