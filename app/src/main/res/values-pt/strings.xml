@@ -83,16 +83,14 @@
     <string name="action_add_category">Adicionar categoria</string>
     <string name="action_create_default_categories">Criar categorias de exemplo</string>
     <string name="category_dialog_title">Categoria</string>
-    <string name="mfa_title">Código do autenticador</string>
-    <string name="mfa_text">Introduza o código de 6 dígitos que a app autenticadora mostra para %1$s.</string>
-    <string name="mfa_setup_title">Configurar a verificação em dois passos</string>
-    <string name="mfa_setup_text">Leia o QR code com uma app autenticadora (Google Authenticator, Microsoft Authenticator…) ou escreva a chave abaixo. Depois introduza o código que ela mostra.</string>
-    <string name="mfa_qr_description">QR code para a app autenticadora</string>
-    <string name="action_open_authenticator">Abrir na app autenticadora</string>
-    <string name="no_authenticator">Não há nenhuma app autenticadora neste telemóvel. Leia o QR code ou escreva a chave.</string>
+    <string name="mfa_title">Código de verificação</string>
+    <string name="mfa_text">Enviámos um código de 6 dígitos para %1$s. É válido durante 10 minutos.</string>
     <string name="field_code">Código de 6 dígitos</string>
+    <string name="action_resend_code">Enviar novo código</string>
+    <string name="mfa_code_sent">Novo código enviado. Veja a caixa de entrada e o spam.</string>
+    <string name="mfa_send_error">Não foi possível enviar o e-mail. Verifique a ligação e tente outra vez.</string>
     <string name="action_confirm">Confirmar</string>
-    <string name="mfa_wrong_code">Código errado. Confirme que a hora do telemóvel está certa e tente outra vez.</string>
+    <string name="mfa_wrong_code">Código errado ou expirado. Tente outra vez ou peça um novo.</string>
     <string name="profile_photo">Fotografia de perfil</string>
     <string name="photo_optional">Fotografia (opcional)</string>
     <string name="pending_title">Bem-vindo, %1$s</string>
@@ -164,4 +162,15 @@
     <string name="resolve_title">Resolver ocorrência</string>
     <string name="resolve_text">Anexe uma fotografia do trabalho concluído. O autor pode reabrir a ocorrência durante 5 dias.</string>
     <string name="resolve_note_hint">Nota (opcional)</string>
+    <!-- Parte B: mensagens e reabertura -->
+    <string name="messages_title">Mensagens</string>
+    <string name="messages_empty">Ainda não há mensagens.</string>
+    <string name="messages_hint">Escreva uma mensagem</string>
+    <string name="messages_closed">Ocorrência encerrada: arquivada, sem mais mensagens.</string>
+    <string name="action_reopen">Reabrir</string>
+    <string name="reopen_title">Reabrir ocorrência</string>
+    <string name="reopen_text">Explique porque é que o problema não está resolvido. A ocorrência volta a Aberto.</string>
+    <string name="reopen_reason_hint">Justificação (obrigatória)</string>
+    <string name="reopen_reason_required">Escreva a justificação para reabrir.</string>
+    <string name="reopen_expired">Já não pode ser reaberta (passaram mais de 5 dias desde que foi resolvida).</string>
 </resources>

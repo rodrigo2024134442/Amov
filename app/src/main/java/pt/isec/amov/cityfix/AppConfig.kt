@@ -12,4 +12,9 @@ object AppConfig {
     const val GUEST_CENTER_LAT = 40.2086
     const val GUEST_CENTER_LNG = -8.4214
     const val GUEST_RADIUS_METERS = 10_000f
+
+    // 2.º fator por e-mail (coleção "mail" + extensão Trigger Email do Firebase).
+    // Validade do código enviado por e-mail e tentativas permitidas antes de ser preciso pedir outro
+    const val MFA_CODE_VALIDITY_MINUTES = 10
+    const val MFA_MAX_ATTEMPTS = 5
 }

@@ -4,7 +4,7 @@
 |---|---|
 | **Data** | 2026-11-07 |
 | **Quem** | Marco, com o Claude |
-| **Estado no fim da sessão** | Guia `docs/CityFix_Guia.html` pronto (secções 1 a 3); o código ainda não foi aplicado ao projeto |
+| **Estado no fim da sessão** | Guia `docs/CityFix_Guia.html` com as secções 0 a 5; secções 1 a 4 aplicadas pelo Marco no projeto (commits `e9250ba` e `b8c3f41`); autenticação a funcionar no emulador, verificação 4.k por terminar |
 
 ---
 
@@ -108,10 +108,19 @@
 - Acrescentada à secção 4 do guia (opcional, no registo e no perfil): `UserAvatar` (iniciais quando não há foto) e `PhotoSourceButtons` (galeria/câmara), compressão a 512 px e envio direto para `users/{uid}/avatar.jpg` no Storage; campo `photoUrl` no perfil; regras do Firestore e do Storage atualizadas no passo 4.j.
 - Compila. Não executado (como o resto da secção 4).
 
+## 10. Fim da sessão: secções 3 e 4 aplicadas e primeiros testes
+
+- O Marco configurou o projeto na consola (passo 3.a) e aplicou as secções 3 e 4 no projeto local (sem commits). A pedido dele, o Claude criou vazios os ficheiros novos da secção 4.
+- Contas de teste criadas: operador `tz@cmcoimbra.pt` e munícipe `jcandido@gmail.com`. As credenciais estão em `docs/CONTAS_DE_TESTE.md`, que foi posto no `.gitignore`.
+- **Problema**: o munícipe não conseguia reportar ocorrências. A causa era a coleção `categories` vazia: o menu de categorias abria sem opções e o formulário nunca ficava válido. A solução é entrar como operador e usar "Criar categorias de exemplo". Confirmou-se que o enunciado pede que as categorias sejam definidas pelo município (I.2.E e I.3.E); o botão de exemplo é uma comodidade do guia.
+- Guia corrigido no passo 3.j: o Background Task Inspector só existe a partir do Android 8, e o emulador é Android 7. Agora verifica-se o `MediaUploadWorker` no Logcat (`WM-WorkerWrapper`, "Worker result SUCCESS").
+- Dúvidas esclarecidas: o munícipe tem de ser validado por um operador (I.2.A e I.3.D); a "Deteção de Impactos" (I.2.F) por agora é só a preferência no perfil; a língua da app segue a do telemóvel.
+
 ## Por fazer no fim da sessão
 
-- Terminar o passo 3.a na consola (do 3.a.2 ao 3.a.7) e seguir para o 3.b.
-- Pedir ao Claude a revisão das secções 1 e 2 (feitas mas não revistas).
-- Decidir como partilhar o `google-services.json`.
-- Secção 4 depois da 3; correr o 4.k com o projeto real (é o primeiro teste da autenticação). Mostrar o TOTP ao professor.
-- Commit da pasta `docs/` (o Claude não fez commit).
+- Entrar como operador e criar as categorias; terminar a verificação 4.k (munícipe a reportar com fotografia, validação, perfil, regras do passo 4.j).
+- Preencher em `docs/CONTAS_DE_TESTE.md` o NIF, o telefone e o estado de cada conta.
+- Mostrar ao professor o 2.º fator com TOTP.
+- ~~Commit das secções 1 a 4~~: feito pelo Marco (commits `e9250ba` e `b8c3f41`); `docs/CONTAS_DE_TESTE.md` ficou de fora (`.gitignore`).
+- Próxima sessão: melhorar o UI/UX.
+- Próximas aulas: GPS e mapas, e notificações.

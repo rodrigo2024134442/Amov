@@ -98,7 +98,7 @@ class RegisterViewModel(private val authRepository: AuthRepository) : ViewModel(
     }
 
     /**
-     * Cria a conta. Se correr bem, a sessão passa a AwaitingMfa (o link foi enviado).
+     * Cria a conta. Se correr bem, a sessão passa a AwaitingMfa (o código é enviado por e-mail).
      */
     fun register() {
         val s = _state.value

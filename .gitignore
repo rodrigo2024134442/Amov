@@ -16,3 +16,6 @@ local.properties
 
 # Contas de teste com credenciais (não partilhar no repositório)
 docs/CONTAS_DE_TESTE.md
+
+# Chave do Google Maps (vai no ZIP de entrega, não no Git)
+secrets.properties

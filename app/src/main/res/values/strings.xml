@@ -83,16 +83,14 @@
     <string name="action_add_category">Add category</string>
     <string name="action_create_default_categories">Create example categories</string>
     <string name="category_dialog_title">Category</string>
-    <string name="mfa_title">Authenticator code</string>
-    <string name="mfa_text">Enter the 6-digit code that your authenticator app shows for %1$s.</string>
-    <string name="mfa_setup_title">Set up two-step verification</string>
-    <string name="mfa_setup_text">Scan the QR code with an authenticator app (Google Authenticator, Microsoft Authenticator…), or type the key below. Then enter the code it shows.</string>
-    <string name="mfa_qr_description">QR code for the authenticator app</string>
-    <string name="action_open_authenticator">Open in authenticator app</string>
-    <string name="no_authenticator">No authenticator app found on this phone. Scan the QR code or type the key.</string>
+    <string name="mfa_title">Verification code</string>
+    <string name="mfa_text">We sent a 6-digit code to %1$s. It is valid for 10 minutes.</string>
     <string name="field_code">6-digit code</string>
+    <string name="action_resend_code">Send a new code</string>
+    <string name="mfa_code_sent">New code sent. Check your inbox and spam folder.</string>
+    <string name="mfa_send_error">Could not send the email. Check the connection and try again.</string>
     <string name="action_confirm">Confirm</string>
-    <string name="mfa_wrong_code">Wrong code. Make sure the phone clock is correct and try again.</string>
+    <string name="mfa_wrong_code">Wrong or expired code. Try again or ask for a new one.</string>
     <string name="profile_photo">Profile photo</string>
     <string name="photo_optional">Photo (optional)</string>
     <string name="pending_title">Welcome, %1$s</string>
@@ -165,4 +163,15 @@
     <string name="resolve_title">Resolve incident</string>
     <string name="resolve_text">Attach a photo of the completed work. The author can reopen the incident within 5 days.</string>
     <string name="resolve_note_hint">Note (optional)</string>
+    <!-- Parte B: mensagens e reabertura -->
+    <string name="messages_title">Messages</string>
+    <string name="messages_empty">No messages yet.</string>
+    <string name="messages_hint">Write a message</string>
+    <string name="messages_closed">Incident closed: archived, no more messages.</string>
+    <string name="action_reopen">Reopen</string>
+    <string name="reopen_title">Reopen incident</string>
+    <string name="reopen_text">Explain why the problem is not solved. The incident goes back to Open.</string>
+    <string name="reopen_reason_hint">Reason (required)</string>
+    <string name="reopen_reason_required">Write the reason for reopening.</string>
+    <string name="reopen_expired">It can no longer be reopened (more than 5 days after being resolved).</string>
 </resources>

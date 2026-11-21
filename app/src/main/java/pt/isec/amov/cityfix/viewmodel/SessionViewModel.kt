@@ -9,7 +9,6 @@ import kotlinx.coroutines.launch
 import pt.isec.amov.cityfix.R
 import pt.isec.amov.cityfix.data.AuthRepository
 import pt.isec.amov.cityfix.model.Session
-import pt.isec.amov.cityfix.utils.Totp
 import pt.isec.amov.cityfix.utils.Validators
 
 /**
@@ -19,46 +18,58 @@ import pt.isec.amov.cityfix.utils.Validators
 class SessionViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     /**
-     * Estado da sessão (Loading, Guest, MfaSetup, AwaitingMfa, PendingValidation, Active).
+     * Estado da sessão (Loading, Guest, AwaitingMfa, PendingValidation, Active).
      */
     val session: StateFlow<Session> = authRepository.session
-
-    /**
-     * Segredo para configurar a app autenticadora. Criado uma vez e guardado no ViewModel,
-     * para não mudar se o ecrã rodar enquanto o utilizador o está a ler.
-     */
-    val newMfaSecret: String = Totp.generateSecret()
 
     // Mensagem de erro do ecrã do 2.º fator, como ID de strings.xml
     private val _mfaMessage = MutableStateFlow<Int?>(null)
     val mfaMessage: StateFlow<Int?> = _mfaMessage.asStateFlow()
+
+    // Aviso (não erro) do ecrã do 2.º fator, por exemplo "Novo código enviado"
+    private val _mfaInfo = MutableStateFlow<Int?>(null)
+    val mfaInfo: StateFlow<Int?> = _mfaInfo.asStateFlow()
 
     // Erro do telefone no ecrã de perfil
     private val _profilePhoneError = MutableStateFlow<Int?>(null)
     val profilePhoneError: StateFlow<Int?> = _profilePhoneError.asStateFlow()
 
     /**
-     * Logo a seguir ao registo: confirma o primeiro código e grava o segredo.
+     * Ao abrir o ecrã do 2.º fator: envia o código por e-mail, se ainda não houver um válido.
      */
-    fun confirmMfaSetup(code: String) = runMfa { authRepository.confirmMfaSetup(newMfaSecret, code) }
+    fun ensureMfaCode() = sendMfaCode(force = false)
 
     /**
-     * No login: confirma o código da app autenticadora.
+     * Botão "Enviar novo código".
      */
-    fun verifyMfa(code: String) = runMfa { authRepository.verifyMfa(code) }
+    fun resendMfaCode() = sendMfaCode(force = true)
 
-    private fun runMfa(check: suspend () -> Boolean) {
+    private fun sendMfaCode(force: Boolean) {
         viewModelScope.launch {
-            _mfaMessage.value = try {
-                if (check()) null else R.string.mfa_wrong_code
+            try {
+                authRepository.sendMfaCode(force)
+                if (force) {
+                    _mfaMessage.value = null
+                    _mfaInfo.value = R.string.mfa_code_sent
+                }
             } catch (_: Exception) {
-                R.string.error_network
+                _mfaInfo.value = null
+                _mfaMessage.value = R.string.mfa_send_error
             }
         }
     }
 
+    /**
+     * Confirma o código recebido por e-mail.
+     */
+    fun verifyMfa(code: String) {
+        _mfaInfo.value = null
+        _mfaMessage.value = if (authRepository.verifyMfa(code)) null else R.string.mfa_wrong_code
+    }
+
     fun signOut() {
         _mfaMessage.value = null
+        _mfaInfo.value = null
         authRepository.signOut()
     }
 

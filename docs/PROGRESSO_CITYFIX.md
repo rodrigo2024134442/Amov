@@ -10,27 +10,31 @@ Estado geral do trabalho prático de Arquiteturas Móveis 2026/27 (enunciado: `A
 
 | | |
 |---|---|
-| **Fase atual** | Secções 1 a 4 do guia e Ficha 10 (mapas) feitas; **perfil anónimo completo** (sessão 03, falta publicar a regra `stats`) |
-| **Próximo passo** | Ciclo de vida do ticket do lado do operador (estados, pedir dados, iniciar, resolver com prova) e mensagens |
-| **Última atualização** | 2026-11-16 |
+| **Fase atual** | Secções 1 a 4 do guia, Ficha 10 (mapas), perfil anónimo e **Parte A do operador** (ciclo do ticket, prova, fecho automático) feitos |
+| **Próximo passo** | **Parte B (Marco)**: mensagens e botão Reabrir, ver `docs/PARTE_B_MARCO.md`. Depois dividir o resto (notificações, geofence, impactos, grupo, vídeos, relatório) |
+| **Última atualização** | 2026-11-21 |
 | **Grupo** | Marco (2024114817) e Rodrigo (2024134442) |
 | **Repositório** | `rodrigo2024134442/Amov` (GitHub, **público**), branch `main` |
 | **Backend** | Firebase em uso: Authentication, Firestore (offline), Storage (Blaze). Falta o FCM |
-| **Entrega** | **2026-11-22 às 23:59** (−5 % por hora de atraso). **Faltam 6 dias** |
+| **Entrega** | **2026-11-22 às 23:59** (−5 % por hora de atraso). **Falta 1 dia** |
 | **Defesa funcional** | 23 a 27 de novembro, nas aulas práticas, com os dois presentes |
 
 > Atualizar esta caixa sempre que um passo muda de estado.
 
 > Mockup da interface (os três perfis, portrait/landscape, EN/PT): **`docs/cityfix_mockup_v3.html`** (abrir no browser).
 
+> Parte B do operador/ticket (o que o Marco tem de fazer, escrito pelo Rodrigo): **`docs/PARTE_B_MARCO.md`**.
+
 ### 🔔 Lembretes em aberto
 
-- [ ] **Publicar a regra do documento `stats/global`** nas regras do Firestore (ver sessão 03, secção 3) e entrar uma vez como operador para calcular os indicadores. Sem isto o dashboard mostra "—".
-- [ ] **Chave do Google Maps**: o `AndroidManifest.xml` tem `android:value=""`, por isso os mapas ficam cinzentos. O repositório é público: pôr a chave no `local.properties` (Secrets Gradle Plugin) e restringi-la à app na consola Google Cloud.
-- [ ] **Domínio dos operadores**: o guia e a sessão 02 decidiram `@cmcoimbra.pt`; o commit `256dcbd` mudou o `AppConfig` para `isec.pt` (os alunos também têm `@isec.pt`, por isso qualquer aluno ficaria operador). Decidir entre os dois e escrever a decisão no relatório.
+- [x] ~~Publicar a regra do documento `stats/global`~~. O Rodrigo publicou as regras do Firestore, incluindo `stats` e mensagens (`PARTE_B_MARCO.md`, 19/11). As estatísticas são recalculadas quando um operador entra.
+- [x] ~~Chave do Google Maps~~ (2026-11-21, Marco): chave "CityFix Maps" na Google Cloud, restrita ao Maps SDK for Android e à app (`pt.isec.amov.cityfix` + SHA-1 de debug do Marco). Fica em `secrets.properties` (raiz, fora do Git) e entra no Manifest por `manifestPlaceholders`. **O Rodrigo** tem de criar o mesmo ficheiro e acrescentar o SHA-1 dele na chave. O `secrets.properties` tem de ir no ZIP de entrega.
+- [ ] **Domínio dos operadores**: o Rodrigo passou para **`@isec.pt`**, no `AppConfig.OPERATOR_EMAIL_DOMAIN` e nas regras (operador de teste dele: `a2024134442@isec.pt`). O `tz@cmcoimbra.pt` continua operador porque o perfil já existia. Atenção: com `@isec.pt` qualquer aluno fica operador. Confirmar com o Rodrigo e justificar no relatório.
 - [ ] Levar às aulas as dúvidas do `duvidas.txt` (respostas sugeridas na sessão 03, secção 5).
-- [ ] Mostrar ao professor o 2.º fator com **app autenticadora (TOTP)** e confirmar que é aceite como MFA.
-- [ ] As regras do Firestore e do Storage em modo de teste **expiram**: confirmar a data (depois da defesa) ou que já estão as regras por perfil (passo 4.j).
+- [ ] **2.º fator passou de TOTP para código por e-mail** (2026-11-21, Marco): `EmailCodeSender` grava em `mail/{id}` e a extensão **Trigger Email from Firestore** envia por SMTP (Gmail com palavra-passe de app). Código de 6 dígitos válido 10 min, máx. 5 tentativas. Falta: instalar a extensão, publicar a regra de `mail` e testar. Contas com e-mail fictício (ex.: `tz@cmcoimbra.pt`) deixam de conseguir entrar. Para o relatório: o código é gerado e verificado no telemóvel.
+- [x] ~~As regras em modo de teste expiram~~. Já estão publicadas as regras por perfil (Firestore; confirmar também as do Storage).
+- [ ] **Escritas sem aviso**: as escritas no Firestore são feitas sem `await` (modo offline); se as regras recusarem, a alteração aparece e desaparece. Ver no Logcat `PERMISSION_DENIED`.
+- [ ] **Contas de teste**: o Rodrigo usa `a2024134442@isec.pt` (operador) e o José Cândido (munícipe, autor dos 6 incidentes). Passwords: pedir ao Rodrigo (não estão no repositório). Juntar ao `docs/CONTAS_DE_TESTE.md`.
 - [ ] Decidir como partilhar o `google-services.json` (não está no Git, e o repositório é público: ótimo, mas tem de ir no ZIP de entrega).
 - [x] ~~Decidir o plano Blaze~~. **Blaze** (sessão 02).
 - [x] ~~O projeto não compila (falta `kotlinx-serialization`)~~. Resolvido no commit `684dc05`.
@@ -123,20 +127,22 @@ Estado geral do trabalho prático de Arquiteturas Móveis 2026/27 (enunciado: `A
 | O quê | Ficheiros | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|
 | Ficha 10: escolher a localização no mapa, morada por geocodificação inversa, mapa no detalhe | `MapLocationPicker.kt`, `LocationUtils.kt`, `EditScreen.kt`, `ShowScreen.kt` | ✅ | Rodrigo | 2026-11-14 | Commit `256dcbd`. Falta a chave do Maps (lembretes) |
-| Perfil anónimo completo: 10 km, dashboard, lista e detalhe | ver sessão 03 | ✅ | Rodrigo (com o Claude) | 2026-11-16 | Aplicado e a correr no emulador; **ainda sem commit** |
+| Perfil anónimo completo: 10 km, dashboard, lista e detalhe | ver sessão 03 | ✅ | Rodrigo (com o Claude) | 2026-11-16 | Commit `4cd6ef0` |
+| Operador, Parte A: ciclo do ticket com histórico, pedir dados, iniciar obra, resolver com prova, fecho automático, contactos do autor | `model/StatusChange.kt`, `Message.kt`, `data/MessagesRepository.kt` (só `send`), `ProofUploadWorker.kt`, `AutoCloseWorker.kt`, `ui/components/OperatorActions.kt`, `IncidentHistory.kt`, `TicketSection.kt`, `viewmodel/TicketViewModel.kt` | ✅ | Rodrigo | 2026-11-19 | Commit `176a2be`. O munícipe só edita/apaga em `OPEN` |
+| Parte B: ler mensagens, `MessagesSection`, `MessagesViewModel`, botão Reabrir, ligar no `partB = { }` do `MainActivity` | `MessagesRepository.kt` (`observeMessages`, `toMessage`), `viewmodel/MessagesViewModel.kt`, `ui/components/MessagesSection.kt`, `MainActivity.kt`, `strings.xml` | 🟡 | Marco (com o Claude) | 2026-11-21 | Testado no emulador API 35: mensagens nos dois sentidos, pedir dados, iniciar, resolver. **Falta testar o Reabrir.** Assinaturas partilhadas sem alterações |
 
 ---
 
 ## Requisitos do enunciado
 
-Estado confirmado pela leitura do código em 2026-11-16 (sessão 03).
+Estado confirmado pela leitura do código em 2026-11-16 (sessão 03); atualizado em 2026-11-21 com a Parte A do operador (commit `176a2be`).
 
 ### I.1 Munícipe anónimo (sem login, a menos de 10 km da Praça da República)
 
 | Req. | O que se faz | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|
 | A1 | Verificar a distância à Praça da República (10 km) | ✅ | Rodrigo | 2026-11-16 | `LocationRepository`, `GuestAreaViewModel`, `GuestAreaScreen`. Pede a permissão; bloqueia fora da área, sem permissão ou sem GPS |
-| A2 | Dashboard: tempo médio de reparação, nº total de ocorrências, % de ativas | 🟡 | Rodrigo | 2026-11-16 | Feito (`stats/global`, `DashboardScreen`). Falta publicar a regra. O tempo médio só aparece quando o operador resolver ocorrências (O-E3) |
+| A2 | Dashboard: tempo médio de reparação, nº total de ocorrências, % de ativas | ✅ | Rodrigo | 2026-11-19 | `stats/global`, `DashboardScreen`. Regra publicada; o tempo médio é atualizado ao resolver (Parte A) |
 | A3 | Lista de ocorrências públicas ativas (categoria, situação, thumbnail) | ✅ | Rodrigo | 2026-11-16 | Só Aberto, Pedido de Informações e Em Resolução; situação sempre visível no cartão |
 | A4 | Detalhe público: sem dados do autor nem coordenadas; imagens e vídeos; mapa com zoom afastado | ✅ | Rodrigo | 2026-11-16 | "Autor oculto" e mapa da zona aproximada (~1 km, zoom 12, sem marcador). Vídeos: ver M-E1 |
 
@@ -148,10 +154,10 @@ Estado confirmado pela leitura do código em 2026-11-16 (sessão 03).
 | M-B | Login com e-mail e password, MFA e recuperação por e-mail | ✅ | Marco | 2026-11-07 | 2.º fator = app autenticadora (TOTP). Limitação para o relatório: a passagem do 2.º fator só fica guardada no telemóvel |
 | M-C | Editar perfil (sem alterar nome, NIF e localização) | ✅ | Marco | 2026-11-07 | Telefone, deteção de impactos e fotografia |
 | M-D | Acesso às funcionalidades do anónimo | ✅ | Rodrigo | 2026-11-16 | Separador "Painel" e separador "Públicas" na lista |
-| M-E1 | Abrir ocorrência: categoria ativa, situação, descrição, pelo menos 1 imagem ou vídeo, público ou privado | 🟡 | Marco / Rodrigo | 2026-11-14 | Funciona com imagens (até 3) e localização no mapa. **Faltam os vídeos**. O autor pode editar e apagar em qualquer estado (devia ser só em "Aberto"; apagar quebra a rastreabilidade) |
+| M-E1 | Abrir ocorrência: categoria ativa, situação, descrição, pelo menos 1 imagem ou vídeo, público ou privado | 🟡 | Marco / Rodrigo | 2026-11-14 | Funciona com imagens (até 3) e localização no mapa. **Faltam os vídeos**. O autor só edita e apaga em "Aberto" (Parte A) |
 | M-E2 | Lista das minhas ocorrências, com o estado | ✅ | Marco | 2026-11-07 | Separador "As minhas" |
-| M-E3 | Detalhe, com mensagens trocadas com a câmara | 🟡 | | | Detalhe feito; **faltam as mensagens** (ex.: subcoleção `incidents/{id}/messages`) |
-| M-E4 | Reabrir (até 5 dias depois de resolvida) | ⬜ | | | Usar `StatsRepository.addReopened()` no mesmo batch |
+| M-E3 | Detalhe, com mensagens trocadas com a câmara | ✅ | Rodrigo / Marco | 2026-11-21 | Mensagens em tempo real (as próprias à direita), envio desativado em `CLOSED`. Testado com munícipe e operador |
+| M-E4 | Reabrir (até 5 dias depois de resolvida) | 🟡 | Marco | 2026-11-21 | Botão só para o autor com `canReopen`; justificação obrigatória (histórico + mensagem). Compila; **falta testar** |
 | M-F | Deteção de impactos (acelerómetro, eixo vertical) e sugestão de abrir ocorrência | ⬜ | | | |
 | M-G | Ocorrência de grupo: mesma categoria e situação, a menos de 10 m | ⬜ | | | |
 
@@ -164,16 +170,16 @@ Estado confirmado pela leitura do código em 2026-11-16 (sessão 03).
 | O-C | Editar perfil (sem alterar nome e NIF) | ✅ | Marco | 2026-11-07 | |
 | O-D | Validar o registo de munícipes (nome, localização, NIF) | 🟡 | Marco | 2026-11-07 | Ecrã feito; a localização fica vazia até o M-A a pedir |
 | O-E1 | Gerir categorias: criar, editar, ativar e desativar | ✅ | Marco | 2026-11-07 | |
-| O-E2 | Painel com todas as ocorrências (coordenadas, contactos, histórico, fotos e vídeos) | 🟡 | | | Vê todas, com mapa e coordenadas. **Faltam** os contactos do autor e o histórico |
-| O-E3 | Mudar o estado do ticket (com timestamp), pedir dados, iniciar trabalhos, carregar prova da conclusão | ⬜ | | | **Prioridade 1.** Ao resolver: preencher `resolvedAt` e chamar `StatsRepository.addResolved()` no mesmo batch |
+| O-E2 | Painel com todas as ocorrências (coordenadas, contactos, histórico, fotos e vídeos) | 🟡 | Rodrigo | 2026-11-19 | Coordenadas, contactos do autor (com botão Ligar) e histórico feitos. Faltam os vídeos |
+| O-E3 | Mudar o estado do ticket (com timestamp), pedir dados, iniciar trabalhos, carregar prova da conclusão | ✅ | Rodrigo | 2026-11-19 | `OperatorActions`, `TicketViewModel`; prova enviada pelo `ProofUploadWorker` (`incidents/{id}/proof.jpg`). Prova só com foto |
 | O-F | Alerta aos autores quando o operador está a menos de 20 m de uma ocorrência ativa | ⬜ | | | Localização em segundo plano |
 
 ### II e III: Ciclo de vida do ticket e notificações
 
 | Req. | O que se faz | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|
-| T1 | Estados: Aberto → Pedido de Informações → Em Resolução → Resolvido → Encerrado | ⬜ | | | Os estados existem no modelo (`IncidentStatus`), mas nada os muda |
-| T2 | Fecho automático 5 dias depois de resolvido | ⬜ | | | Ex.: WorkManager periódico |
+| T1 | Estados: Aberto → Pedido de Informações → Em Resolução → Resolvido → Encerrado | ✅ | Rodrigo | 2026-11-19 | Transições validadas em `IncidentLifecycle.canTransition`; histórico com data, autor e nota |
+| T2 | Fecho automático 5 dias depois de resolvido | ✅ | Rodrigo | 2026-11-19 | `AutoCloseWorker`, de 6 em 6 horas e quando a app abre |
 | N1 | Notificação em cada mudança de estado | ⬜ | | | Alternativa sem servidor: notificações locais a partir dos snapshot listeners (justificar no relatório) |
 | N2 | Notificação de mensagens (pedidos de informação e respostas) | ⬜ | | | |
 | N3 | Alerta de proximidade da equipa (geofence de 20 m) | ⬜ | | | |
@@ -185,7 +191,7 @@ Estado confirmado pela leitura do código em 2026-11-16 (sessão 03).
 |---|---|---|---|---|---|
 | F1 | Projeto Firebase e `google-services.json` | ✅ | Marco | 2026-11-07 | |
 | F2 | Firebase Authentication (sessão guardada no dispositivo) | ✅ | Marco | 2026-11-07 | |
-| F3 | Cloud Firestore com persistência offline (ocorrências, categorias, mensagens) | 🟡 | Marco | 2026-11-07 | Ocorrências, categorias, utilizadores e `stats`. Faltam as mensagens |
+| F3 | Cloud Firestore com persistência offline (ocorrências, categorias, mensagens) | 🟡 | Marco / Rodrigo | 2026-11-19 | Ocorrências, categorias, utilizadores, `stats` e envio de mensagens. Falta ler as mensagens (Parte B) |
 | F4 | Compressão de imagens e thumbnails antes do envio | ✅ | Marco | 2026-11-07 | `ImageUtils` (1600 px e 320 px) |
 | F5 | Envio de fotos e vídeos para o Firebase Storage pelo WorkManager, só com rede | 🟡 | Marco | 2026-11-07 | Só fotos |
 | F6 | Firebase Cloud Messaging (push) | ⬜ | | | |
@@ -213,6 +219,8 @@ Estado confirmado pela leitura do código em 2026-11-16 (sessão 03).
 ---
 
 ## Plano até à entrega (sugerido na sessão 03)
+
+> Atualização 2026-11-21: O-E3, T1 e T2 feitos pelo Rodrigo (Parte A). Mensagens e Reabrir (M-E3, M-E4, N2) passaram para o Marco (Parte B). O resto está em `PARTE_B_MARCO.md`, secção 6, para dividir.
 
 | Dias | Pessoa A | Pessoa B |
 |---|---|---|

@@ -11,10 +11,7 @@ sealed interface Session {
     // Sem sessão: munícipe anónimo
     data object Guest : Session
 
-    // Password certa, mas ainda sem app autenticadora configurada (logo a seguir ao registo)
-    data class MfaSetup(val email: String) : Session
-
-    // Password certa, à espera do código da app autenticadora (2.º fator)
+    // Password certa, à espera do código enviado por e-mail (2.º fator)
     data class AwaitingMfa(val email: String) : Session
 
     // Sessão completa, mas o munícipe ainda não foi validado por um operador

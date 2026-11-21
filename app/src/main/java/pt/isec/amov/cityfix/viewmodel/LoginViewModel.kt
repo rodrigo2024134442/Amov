@@ -52,7 +52,7 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
     }
 
     /**
-     * 1.º fator. Se correr bem, a sessão passa a AwaitingMfa e a MainActivity mostra o ecrã do link.
+     * 1.º fator. Se correr bem, a sessão passa a AwaitingMfa e a MainActivity mostra o ecrã do código enviado por e-mail.
      */
     fun signIn() {
         val current = _state.value

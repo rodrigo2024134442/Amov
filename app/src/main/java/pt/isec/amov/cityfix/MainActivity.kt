@@ -37,6 +37,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import pt.isec.amov.cityfix.data.LocationRepository
+import pt.isec.amov.cityfix.model.IncidentLifecycle
 import pt.isec.amov.cityfix.model.IncidentStatus
 import pt.isec.amov.cityfix.model.Session
 import pt.isec.amov.cityfix.model.UserRole
@@ -44,6 +45,9 @@ import pt.isec.amov.cityfix.ui.components.AppBottomBar
 import pt.isec.amov.cityfix.ui.components.AppNavigationRail
 import pt.isec.amov.cityfix.ui.components.MainTopAppBar
 import pt.isec.amov.cityfix.ui.components.ResolveProofDialog
+import pt.isec.amov.cityfix.ui.components.MessagesSection
+import pt.isec.amov.cityfix.ui.components.ReopenButton
+import pt.isec.amov.cityfix.ui.components.ReopenDialog
 import pt.isec.amov.cityfix.ui.components.TicketSection
 import pt.isec.amov.cityfix.ui.components.TopLevelDestination
 import pt.isec.amov.cityfix.ui.navigation.CategoriesRoute
@@ -63,7 +67,6 @@ import pt.isec.amov.cityfix.ui.screens.ListScreen
 import pt.isec.amov.cityfix.ui.screens.LoadingScreen
 import pt.isec.amov.cityfix.ui.screens.LoginScreen
 import pt.isec.amov.cityfix.ui.screens.MfaScreen
-import pt.isec.amov.cityfix.ui.screens.MfaSetupScreen
 import pt.isec.amov.cityfix.ui.screens.PendingScreen
 import pt.isec.amov.cityfix.ui.screens.ProfileScreen
 import pt.isec.amov.cityfix.ui.screens.RegisterScreen
@@ -89,6 +92,8 @@ import pt.isec.amov.cityfix.viewmodel.RegisterViewModel
 import pt.isec.amov.cityfix.viewmodel.RegisterViewModelFactory
 import pt.isec.amov.cityfix.viewmodel.SessionViewModel
 import pt.isec.amov.cityfix.viewmodel.SessionViewModelFactory
+import pt.isec.amov.cityfix.viewmodel.MessagesViewModel
+import pt.isec.amov.cityfix.viewmodel.MessagesViewModelFactory
 import pt.isec.amov.cityfix.viewmodel.TicketViewModel
 import pt.isec.amov.cityfix.viewmodel.TicketViewModelFactory
 
@@ -114,27 +119,22 @@ class MainActivity : ComponentActivity() {
             CityFixTheme {
                 val session by sessionViewModel.session.collectAsStateWithLifecycle()
                 val mfaMessage by sessionViewModel.mfaMessage.collectAsStateWithLifecycle()
+                val mfaInfo by sessionViewModel.mfaInfo.collectAsStateWithLifecycle()
 
                 // Enquanto a sessão não está completa, mostra-se um ecrã próprio em vez da navegação
                 when (val s = session) {
                     Session.Loading -> Scaffold { p ->
                         LoadingScreen(onCancel = sessionViewModel::signOut, modifier = Modifier.padding(p))
                     }
-                    is Session.MfaSetup -> Scaffold { p ->
-                        MfaSetupScreen(
-                            email = s.email,
-                            secret = sessionViewModel.newMfaSecret,
-                            message = mfaMessage,
-                            onConfirm = sessionViewModel::confirmMfaSetup,
-                            onCancel = sessionViewModel::signOut,
-                            modifier = Modifier.padding(p)
-                        )
-                    }
                     is Session.AwaitingMfa -> Scaffold { p ->
+                        // Envia o código por e-mail ao entrar neste ecrã (não reenvia se já houver um válido)
+                        LaunchedEffect(s.email) { sessionViewModel.ensureMfaCode() }
                         MfaScreen(
                             email = s.email,
                             message = mfaMessage,
+                            info = mfaInfo,
                             onConfirm = sessionViewModel::verifyMfa,
+                            onResend = sessionViewModel::resendMfaCode,
                             onCancel = sessionViewModel::signOut,
                             modifier = Modifier.padding(p)
                         )
@@ -364,9 +364,41 @@ class MainActivity : ComponentActivity() {
                                         onStartWork = { ticketViewModel.startWork(incident) },
                                         onOpenResolve = ticketViewModel::openResolveDialog,
                                         partB = {
-                                            // PARTE B (Marco): secção de mensagens e botão "Reabrir" aqui.
-                                            // Já fica no sítio do mockup: operador antes do histórico,
-                                            // autor depois do cartão do histórico.
+                                            // PARTE B: mensagens e botão "Reabrir" (no sítio do mockup:
+                                            // operador antes do histórico, autor depois do histórico).
+                                            // Associado à rota do detalhe, como o TicketViewModel.
+                                            val messagesViewModel: MessagesViewModel = viewModel(
+                                                factory = MessagesViewModelFactory(
+                                                    route.incidentId, app.messagesRepository,
+                                                    app.repository, app.authRepository
+                                                )
+                                            )
+                                            val messages by messagesViewModel.messages.collectAsStateWithLifecycle()
+                                            val draft by messagesViewModel.draft.collectAsStateWithLifecycle()
+                                            val reopenOpen by messagesViewModel.reopenDialogOpen.collectAsStateWithLifecycle()
+                                            val reopenReason by messagesViewModel.reopenReason.collectAsStateWithLifecycle()
+                                            val reopenError by messagesViewModel.reopenError.collectAsStateWithLifecycle()
+                                            // Só o autor reabre, até 5 dias depois de resolvida
+                                            if (isOwner && IncidentLifecycle.canReopen(incident)) {
+                                                ReopenButton(onClick = messagesViewModel::openReopenDialog)
+                                            }
+                                            MessagesSection(
+                                                messages = messages,
+                                                currentUid = messagesViewModel.currentUid,
+                                                draft = draft,
+                                                onDraftChange = messagesViewModel::onDraftChange,
+                                                onSend = { messagesViewModel.send(incident) },
+                                                closed = incident.status == IncidentStatus.CLOSED
+                                            )
+                                            if (reopenOpen && isOwner) {
+                                                ReopenDialog(
+                                                    reason = reopenReason,
+                                                    error = reopenError,
+                                                    onReasonChange = messagesViewModel::onReopenReasonChange,
+                                                    onConfirm = { messagesViewModel.reopen(incident) },
+                                                    onDismiss = messagesViewModel::dismissReopen
+                                                )
+                                            }
                                         }
                                     )
                                 }

@@ -1,3 +1,11 @@
+import java.util.Properties
+
+// Chaves que não vão para o Git (o repositório é público): secrets.properties na raiz do projeto.
+// Exemplo do conteúdo: MAPS_API_KEY=AIza...
+val secrets = Properties().apply {
+    rootProject.file("secrets.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -19,6 +27,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Chave do Google Maps, usada no AndroidManifest.xml (${MAPS_API_KEY})
+        manifestPlaceholders["MAPS_API_KEY"] = secrets.getProperty("MAPS_API_KEY", "")
     }
 
     buildTypes {
@@ -54,7 +65,6 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
-    implementation(libs.zxing.core)
     implementation(libs.firebase.storage)
     implementation(libs.androidx.work.runtime)
     implementation(libs.kotlinx.coroutines.play.services)
