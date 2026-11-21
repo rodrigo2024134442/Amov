@@ -1,4 +1,24 @@
 autenticação com QRcode na aplicação, ok?
 recuperação de pass só funciona com emails reias? devem ser reais?
 
- 
+- 3a7
+
+Feito:
+Adaptado o código da aula 8 (P08)
+Adaptado o código da aula 9 (P09)
+Textos em inglês e português (strings.xml)
+Firebase: ocorrências no Firestore (funciona offline) e imagens no Storage, enviadas pelo WorkManager
+Autenticação: registo, login, 2.º fator com app autenticadora (TOTP), recuperação da password
+Perfis: anónimo, munícipe (pendente até ser validado) e operador (@cmcoimbra.pt)
+Operador: valida munícipes e gere as categorias
+Fotografia de perfil opcional
+Regras de segurança por perfil
+
+
+Por fazer
+
+GPS e mapas: localização no registo e nas ocorrências, raio de 10 km do anónimo
+Notificações
+Ciclo de vida do ticket e mensagens
+Ocorrências de grupo e deteção de impactos
+Melhorar UI/UX
