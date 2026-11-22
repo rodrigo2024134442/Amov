@@ -36,7 +36,7 @@
   <table>
     <tr><th>Aluno</th><th>Número</th></tr>
     <tr><td>Marco Marcelo</td><td>2024114817</td></tr>
-    <tr><td>Rodrigo</td><td>2024134442</td></tr>
+    <tr><td>Rodrigo Costa</td><td>2024134442</td></tr>
   </table>
   <p class="sub" style="margin-top:30px">Entrega: 22 de novembro de 2026</p>
 </div>
@@ -190,7 +190,7 @@
   <tr><td>2</td><td>Com NIF repetido, voltava ao ecrã anterior sem mensagem (e chegava a ser enviado um código MFA)</td><td>A conta é criada antes de reservar o NIF; a sessão mudava para o 2.º fator e o ecrã de registo era destruído</td><td>Durante o registo a sessão continua anónima; o erro "NIF já registado" aparece no formulário</td></tr>
   <tr><td>12/14</td><td>Todos os <i>push</i> eram recusados ("0/1 enviadas")</td><td>Tokens FCM antigos guardados nos perfis; a função não registava o motivo</td><td>A função regista o motivo de cada recusa e apaga os tokens inválidos; depois da correção os envios passaram a "1/1"</td></tr>
 </table>
-<div class="note"><b>Notificações push.</b> O envio pelas Cloud Functions está confirmado nos registos ("1/1 enviadas") e as notificações chegam ao emulador com Google Play. No emulador sem Google Play (Nexus 7, Google APIs) a receção não foi confirmada; recomenda-se demonstrar com um dispositivo ou emulador com Play Store. O comando <code>am force-stop</code> não serve para testar a app fechada, porque o Android não entrega mensagens FCM a uma app parada à força: deve fechar-se pelos recentes.</div>
+<div class="note"><b>Notificações push.</b> O envio pelas Cloud Functions está confirmado nos registos ("1/1 enviadas" depois da correção), mas a receção no dispositivo com a app fechada não ficou confirmada de forma conclusiva: um dos emuladores (Nexus 7, Google APIs) não tem Google Play, necessário ao FCM. Recomenda-se demonstrar com um telemóvel ou emulador com Play Store. Com a app aberta, as notificações locais funcionam. O comando <code>am force-stop</code> não serve para testar a app fechada, porque o Android não entrega mensagens FCM a uma app parada à força: deve fechar-se pelos recentes.</div>
 <div class="note"><b>Geofence.</b> Testada antes da bateria final com um fornecedor de localização de teste (as rotas e o <code>geo fix</code> do emulador não atualizam a localização usada pelas geofences); não foi repetida no dia 22. Num telemóvel físico este passo não é necessário.</div>
 
 <h2>11. Opções de implementação</h2>
@@ -228,10 +228,10 @@
 
 <h2>14. Divisão do trabalho</h2>
 <table>
-  <tr><th>Marco (2024114817)</th><th>Rodrigo (2024134442)</th></tr>
+  <tr><th>Marco (2024114817)</th><th>Rodrigo Costa (2024134442)</th></tr>
   <tr>
     <td>Adaptação da arquitetura das aulas P08 e P09; integração com o Firebase (Firestore offline, Storage, WorkManager); autenticação, perfis, MFA, validação de munícipes e categorias; mensagens e reabertura; chave do Maps; publicação das Cloud Functions e regras; testes</td>
-    <td>Modelo inicial e navegação; mapas (ficha 10); perfil anónimo e dashboard; ciclo de vida do ticket do operador e prova de resolução; fecho automático; vídeos; ocorrências de grupo; deteção de impactos; notificações locais e push; geofence; Cloud Functions e regras</td>
+    <td>Modelo inicial e navegação; mapas (ficha 10); perfil anónimo e dashboard; ciclo de vida do ticket do operador e prova de resolução; fecho automático; vídeos; ocorrências de grupo; deteção de impactos; notificações locais e push; geofence; Cloud Functions e regras; bateria final de testes e correções (localização obrigatória, grupos, notificação → detalhe, NIF repetido, envio de <i>push</i>)</td>
   </tr>
 </table>
 
