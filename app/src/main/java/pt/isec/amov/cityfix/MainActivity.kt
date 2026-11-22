@@ -432,8 +432,13 @@ class MainActivity : ComponentActivity() {
                         // Procura-se também na pré-visualização do dashboard (pode vir de lá).
                         val incidents by viewModel.incidentsList.collectAsStateWithLifecycle()
                         val recentPublic by dashboardViewModel.recentPublic.collectAsStateWithLifecycle()
+                        // Se não estiver em nenhuma das listas (ex.: privada aberta por notificação com o
+                        // separador "Públicas" ativo), lê-se diretamente pelo ID
+                        val byId by remember(route.incidentId) { app.repository.observeIncident(route.incidentId) }
+                            .collectAsStateWithLifecycle(initialValue = null)
                         val incident = incidents.find { it.id == route.incidentId }
                             ?: recentPublic.find { it.id == route.incidentId }
+                            ?: byId
                         val isOwner = user != null && incident?.userId == user.uid
                         val isOperator = user?.role == UserRole.OPERATOR
                         // Ocorrência de grupo: quem reportou o mesmo problema acompanha esta ocorrência

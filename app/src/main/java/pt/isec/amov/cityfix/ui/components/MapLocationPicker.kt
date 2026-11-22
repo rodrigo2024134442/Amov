@@ -2,6 +2,7 @@ package pt.isec.amov.cityfix.ui.components
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,7 +26,9 @@ fun MapLocationPicker(
     initialLat: Double?,
     initialLng: Double?,
     onLocationSelected: (lat: Double, lng: Double, address: String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    // Se a posição inicial chegar depois (ex.: impacto detetado), obter também a morada
+    resolveInitialAddress: Boolean = false
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -38,11 +41,27 @@ fun MapLocationPicker(
         mutableStateOf(if (initialLat != null && initialLng != null) LatLng(initialLat, initialLng) else null)
     }
 
+    // A posição inicial pode chegar depois do primeiro desenho (ex.: GPS no impacto detetado):
+    // mostra o marcador, centra o mapa e, se pedido, obtém a morada.
+    LaunchedEffect(initialLat, initialLng) {
+        if (initialLat == null || initialLng == null) return@LaunchedEffect
+        val pos = LatLng(initialLat, initialLng)
+        if (pos == selectedPin) return@LaunchedEffect
+        selectedPin = pos
+        cameraState.position = CameraPosition.fromLatLngZoom(pos, 15f)
+        if (resolveInitialAddress) {
+            val addr = LocationUtils.reverseGeocode(context, pos.latitude, pos.longitude)
+            onLocationSelected(pos.latitude, pos.longitude, addr)
+        }
+    }
+
     GoogleMap(
         modifier = modifier.fillMaxSize(),
         cameraPositionState = cameraState,
         onMapClick = { point ->
             selectedPin = point
+            // Grava logo a posição (sem esperar pela morada): gravar a seguir já leva a localização
+            onLocationSelected(point.latitude, point.longitude, "")
             coroutineScope.launch {
                 val addr = LocationUtils.reverseGeocode(context, point.latitude, point.longitude)
                 onLocationSelected(point.latitude, point.longitude, addr)

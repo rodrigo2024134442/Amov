@@ -242,10 +242,19 @@ fun EditScreen(
                 text = stringResource(R.string.label_select_location),
                 style = MaterialTheme.typography.labelMedium
             )
+            if (state.latitude == null || state.longitude == null) {
+                Text(
+                    text = stringResource(R.string.error_location_required),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
             MapLocationPicker(
                 initialLat = state.latitude,
                 initialLng = state.longitude,
                 onLocationSelected = onLocationSelected,
+                // Vinda de um impacto: a posição chega depois; falta preencher a morada
+                resolveInitialAddress = state.address.isBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)

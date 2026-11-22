@@ -105,6 +105,25 @@ class IncidentsRepository(
     }
 
     /**
+     * Uma ocorrência pelo ID, em tempo real (ex.: aberta a partir de uma notificação, quando não
+     * está na lista visível, como uma privada com o separador "Públicas" ativo). Emite null se não
+     * existir ou se as regras recusarem a leitura.
+     */
+    fun observeIncident(id: String): Flow<Incident?> = callbackFlow {
+        val registration = incidentsCollection.document(id).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.w(TAG, "Erro a ler o incidente $id", error)
+                trySend(null)
+                return@addSnapshotListener
+            }
+            val incident = snapshot?.takeIf { it.exists() }?.toIncident()
+            incident?.let { cachedIncidents[it.id] = it }
+            trySend(incident)
+        }
+        awaitClose { registration.remove() }
+    }
+
+    /**
      * Cria ou atualiza o incidente (o ID do documento é o ID do incidente).
      * Se for novo, atualiza também os indicadores (stats/global) no mesmo WriteBatch.
      * Não se espera pela resposta do servidor (sem await): sem rede, a escrita fica na fila

@@ -69,6 +69,10 @@ class AuthRepository(context: Context) {
     // uid do utilizador que já passou o 2.º fator neste telemóvel (null = nenhum)
     private val mfaUid = MutableStateFlow(prefs.getString(KEY_MFA_UID, null))
 
+    // Durante o registo a conta já existe no Auth, mas a sessão continua "Guest": o ecrã de registo
+    // não é trocado pelo do código e, se o NIF já estiver usado, o erro aparece nele.
+    private val registering = MutableStateFlow(false)
+
     // A sessão vive enquanto a app vive (não depende de nenhum ecrã)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -84,7 +88,7 @@ class AuthRepository(context: Context) {
      * Junta três fontes: o utilizador do Firebase Auth, o 2.º fator neste telemóvel
      * e o perfil (users/{uid}).
      */
-    val session: StateFlow<Session> = firebaseUser
+    val session: StateFlow<Session> = combine(firebaseUser, registering) { user, busy -> if (busy) null else user }
         .flatMapLatest { firebaseUser ->
             if (firebaseUser == null) {
                 flowOf(Session.Guest)
@@ -131,6 +135,15 @@ class AuthRepository(context: Context) {
      * A seguir a sessão passa a AwaitingMfa (código enviado por e-mail).
      */
     suspend fun register(user: User, password: String, photoPath: String?) {
+        registering.value = true
+        try {
+            registerAccount(user, password, photoPath)
+        } finally {
+            registering.value = false
+        }
+    }
+
+    private suspend fun registerAccount(user: User, password: String, photoPath: String?) {
         val result = auth.createUserWithEmailAndPassword(user.email, password).await()
         val uid = result.user!!.uid
         val nifRef = nifsCollection.document("${user.role.name}_${user.nif}")

@@ -57,6 +57,7 @@
     <string name="action_remove_photo">Remove photo</string>
     <string name="label_photos">Photos and videos (%1$d/%2$d)</string>
     <string name="error_media_required">Attach at least one photo or video</string>
+    <string name="error_location_required">Tap the map to set the incident location</string>
 
     <!-- Autenticação e perfis -->
     <string name="login_title">Sign in to CityFix</string>

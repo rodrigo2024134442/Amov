@@ -26,11 +26,12 @@ data class EditIncidentUiState(
     val fromImpact: Boolean = false
 ) {
     // Calculado: o FAB de gravar só fica ativo quando tudo está preenchido e sem erros
-    // (o enunciado obriga a pelo menos uma imagem/vídeo)
+    // (o enunciado obriga a pelo menos uma imagem/vídeo e à georreferenciação)
     val isValid: Boolean
         get() = titleError == null && descriptionError == null &&
                 title.isNotBlank() && description.isNotBlank() &&
                 category.isNotBlank() && situation != null &&
+                latitude != null && longitude != null &&
                 mediaPaths.isNotEmpty()
 
     // Quantas fotografias ou vídeos ainda se podem anexar

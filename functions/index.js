@@ -50,6 +50,17 @@ async function send(tokens, data) {
     android: { priority: "high" },
   });
   logger.info(`${data.type} ${data.incidentId}: ${result.successCount}/${tokens.length} enviadas`);
+  // Motivo de cada envio recusado (ex.: token antigo ou inválido) e limpeza dos tokens que já não existem
+  result.responses.forEach((r, i) => {
+    if (r.success) return;
+    const code = r.error && r.error.code;
+    logger.warn(`${data.type} ${data.incidentId}: falhou ${tokens[i].slice(0, 12)}… → ${code}: ${r.error && r.error.message}`);
+    if (code === "messaging/registration-token-not-registered" || code === "messaging/invalid-registration-token") {
+      db.collection("users").where("fcmToken", "==", tokens[i]).get()
+        .then((snap) => snap.forEach((d) => d.ref.update({ fcmToken: admin.firestore.FieldValue.delete() })))
+        .catch((e) => logger.error("Não foi possível limpar o token", e));
+    }
+  });
 }
 
 // Nova ocorrência: avisa os operadores
