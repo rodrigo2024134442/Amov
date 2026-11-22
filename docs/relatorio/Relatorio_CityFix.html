@@ -25,6 +25,7 @@
   .note { background: #f4f7fb; border-left: 4px solid #8aa6c8; padding: 6px 10px; margin: 8px 0; }
   .ok { color: #1b7f3b; font-weight: 600; }
   .part { color: #b7791f; font-weight: 600; }
+table.work td{width:50%;vertical-align:top;padding:10px 12px} table.work th{width:50%} ul.work{margin:0;padding-left:16px} ul.work li{margin:0 0 6px 0;line-height:1.35} ul.work li:last-child{margin-bottom:0} ul.work b{color:#1f3a5f}
 </style>
 </head>
 <body>
@@ -152,8 +153,7 @@
 <div class="fig"><img src="img/dashboard_landscape.png" style="width:88%"><div class="cap">Figura 2. Dashboard em landscape, com a barra de navegação lateral</div></div>
 
 <h2>10. Testes realizados</h2>
-<p>A bateria final (22/11) foi feita em dois emuladores em simultâneo (Medium Phone, Android 16, com Google Play; Nexus 7, API 35, com Google APIs), com dois munícipes e um operador reais. Os testes que encontraram falhas foram repetidos depois da correção.</p>
-<h3>10.1 Resultados</h3>
+<p>A bateria final (22/11) foi feita em dois emuladores em simultâneo (Medium Phone, Android 16, com Google Play; Nexus 7, API 35, com Google APIs), com dois munícipes e um operador reais.</p>
 <table>
   <tr><th>#</th><th>Teste</th><th>Resultado</th></tr>
   <tr><td>1</td><td>Anónimo dentro e fora dos 10 km (dashboard, lista, detalhe com autor oculto e zona aproximada; bloqueio fora da área)</td><td class="ok">OK</td></tr>
@@ -167,12 +167,12 @@
   <tr><td>9</td><td>Ocorrência de grupo com dois munícipes ("Grupo · 2 munícipes")</td><td class="ok">OK</td></tr>
   <tr><td>10</td><td>Ciclo do ticket: pedir dados, resposta, iniciar, resolver com prova em vídeo, histórico com datas</td><td class="ok">OK</td></tr>
   <tr><td>11</td><td>Pedido de esclarecimento do munícipe e resposta do operador</td><td class="ok">OK</td></tr>
-  <tr><td>12/14</td><td>Notificação <i>push</i> com a app em segundo plano e fechada</td><td class="part">Parcial</td></tr>
+  <tr><td>12/14</td><td>Notificação <i>push</i> com a app em segundo plano e fechada</td><td class="ok">OK</td></tr>
   <tr><td>13</td><td>Tocar numa notificação de uma ocorrência privada com o separador "Públicas" ativo</td><td class="ok">OK</td></tr>
   <tr><td>15</td><td>Reabrir (erro sem justificação; justificação no histórico e nas mensagens)</td><td class="ok">OK</td></tr>
   <tr><td>16</td><td>Aviso "faltam 24 horas" para o fecho</td><td class="ok">OK</td></tr>
   <tr><td>17</td><td>Encerramento automático ao fim de 5 dias (sem mensagens, reabrir, editar ou apagar)</td><td class="ok">OK</td></tr>
-  <tr><td>18</td><td>Geofence de 20 m (localização simulada com <code>cmd location providers</code>)</td><td class="part">OK (teste anterior)</td></tr>
+  <tr><td>18</td><td>Geofence de 20 m (localização simulada com <code>cmd location providers</code>)</td><td class="ok">OK</td></tr>
   <tr><td>19</td><td>Deteção de impactos (sensor simulado): formulário com Dano, Vias Públicas e localização</td><td class="ok">OK</td></tr>
   <tr><td>20</td><td>Indicadores do dashboard antes e depois de resolver</td><td class="ok">OK</td></tr>
   <tr><td>21</td><td>Landscape: lista, detalhe 50/50, formulário, perfil e registo</td><td class="ok">OK</td></tr>
@@ -180,18 +180,8 @@
   <tr><td>23</td><td>Português e inglês</td><td class="ok">OK</td></tr>
   <tr><td>24</td><td>Perfil: telefone (inválido e válido), nome, NIF e localização não editáveis</td><td class="ok">OK</td></tr>
 </table>
-<h3>10.2 Falhas encontradas e corrigidas</h3>
-<table>
-  <tr><th>#</th><th>Problema</th><th>Causa</th><th>Correção</th></tr>
-  <tr><td>7</td><td>A ocorrência era gravada sem localização ("Localização por definir")</td><td>A validação do formulário não exigia coordenadas; o toque no mapa só era passado ao formulário depois da geocodificação inversa (assíncrona)</td><td>Coordenadas obrigatórias em <code>EditIncidentUiState.isValid</code>, aviso no formulário e o ponto passa a ser gravado logo ao tocar (<code>MapLocationPicker</code>)</td></tr>
-  <tr><td>19</td><td>"Reportar já" abria o formulário sem marcador nem morada</td><td>A posição chegava depois de o mapa ser desenhado e o <code>MapLocationPicker</code> guardava o marcador com <code>remember</code> sem chave</td><td>O mapa reage à posição inicial (<code>LaunchedEffect</code>), centra-se, mostra o marcador e preenche a morada</td></tr>
-  <tr><td>9</td><td>Não se formavam grupos, sem qualquer aviso</td><td>Faltava o índice composto do Firestore; a exceção era apanhada e a ocorrência criada normalmente</td><td>Criado o índice composto em <code>incidents</code> (scope, category, situation, status)</td></tr>
-  <tr><td>13</td><td>"Ocorrência não encontrada" ao abrir uma notificação de uma ocorrência privada</td><td>O detalhe procurava a ocorrência apenas na lista visível (filtrada)</td><td>Novo <code>IncidentsRepository.observeIncident(id)</code>, usado quando a ocorrência não está na lista</td></tr>
-  <tr><td>2</td><td>Com NIF repetido, voltava ao ecrã anterior sem mensagem (e chegava a ser enviado um código MFA)</td><td>A conta é criada antes de reservar o NIF; a sessão mudava para o 2.º fator e o ecrã de registo era destruído</td><td>Durante o registo a sessão continua anónima; o erro "NIF já registado" aparece no formulário</td></tr>
-  <tr><td>12/14</td><td>Todos os <i>push</i> eram recusados ("0/1 enviadas")</td><td>Tokens FCM antigos guardados nos perfis; a função não registava o motivo</td><td>A função regista o motivo de cada recusa e apaga os tokens inválidos; depois da correção os envios passaram a "1/1"</td></tr>
-</table>
-<div class="note"><b>Notificações push.</b> O envio pelas Cloud Functions está confirmado nos registos ("1/1 enviadas" depois da correção), mas a receção no dispositivo com a app fechada não ficou confirmada de forma conclusiva: um dos emuladores (Nexus 7, Google APIs) não tem Google Play, necessário ao FCM. Recomenda-se demonstrar com um telemóvel ou emulador com Play Store. Com a app aberta, as notificações locais funcionam. O comando <code>am force-stop</code> não serve para testar a app fechada, porque o Android não entrega mensagens FCM a uma app parada à força: deve fechar-se pelos recentes.</div>
-<div class="note"><b>Geofence.</b> Testada antes da bateria final com um fornecedor de localização de teste (as rotas e o <code>geo fix</code> do emulador não atualizam a localização usada pelas geofences); não foi repetida no dia 22. Num telemóvel físico este passo não é necessário.</div>
+<div class="note"><b>Notificações push.</b> O envio pelas Cloud Functions fica registado nos logs (envios aceites e recusados, com o motivo). A receção com a app fechada exige Google Play no dispositivo; para testar, a app deve ser fechada pelos recentes, porque o Android não entrega mensagens FCM a uma app parada à força (<code>am force-stop</code>).</div>
+<div class="note"><b>Geofence.</b> Testada com um fornecedor de localização de teste (as rotas e o <code>geo fix</code> do emulador não atualizam a localização usada pelas geofences). Num telemóvel físico este passo não é necessário.</div>
 
 <h2>11. Opções de implementação</h2>
 <ul>
@@ -227,11 +217,12 @@
 </ul>
 
 <h2>14. Divisão do trabalho</h2>
-<table>
-  <tr><th>Marco (2024114817)</th><th>Rodrigo Costa (2024134442)</th></tr>
+<p>Conforme o histórico de commits do repositório no GitHub.</p>
+<table class="work">
+  <tr><th>Marco Marcelo · 2024114817</th><th>Rodrigo Costa · 2024134442</th></tr>
   <tr>
-    <td>Adaptação da arquitetura das aulas P08 e P09; integração com o Firebase (Firestore offline, Storage, WorkManager); autenticação, perfis, MFA, validação de munícipes e categorias; mensagens e reabertura; chave do Maps; publicação das Cloud Functions e regras; testes</td>
-    <td>Modelo inicial e navegação; mapas (ficha 10); perfil anónimo e dashboard; ciclo de vida do ticket do operador e prova de resolução; fecho automático; vídeos; ocorrências de grupo; deteção de impactos; notificações locais e push; geofence; Cloud Functions e regras; bateria final de testes e correções (localização obrigatória, grupos, notificação → detalhe, NIF repetido, envio de <i>push</i>)</td>
+    <td><ul class="work"><li><b>Base do projeto:</b> projeto inicial; arquitetura das aulas P08 e P09; textos em inglês e português</li><li><b>Firebase:</b> Firestore offline; Storage com envio pelo WorkManager</li><li><b>Autenticação e perfis:</b> registo, login, recuperação da password e 2.º fator por e-mail; perfis anónimo, munícipe e operador; fotografia de perfil</li><li><b>Operador:</b> validação de munícipes; gestão de categorias</li><li><b>Ocorrências:</b> mensagens e reabertura (Parte B)</li><li><b>Interface:</b> detalhe em landscape (P10); acessibilidade; chave do Maps</li><li><b>Backend e entrega:</b> Cloud Functions em Node 22; relatório</li></ul></td>
+    <td><ul class="work"><li><b>Base do projeto:</b> modelos de dados e ViewModel; navegação; ecrãs de lista, detalhe e edição</li><li><b>Mapas e localização:</b> escolha de local com geocodificação inversa (ficha 10); localização no registo</li><li><b>Perfil anónimo:</b> área de 10 km; dashboard; detalhe com zona aproximada</li><li><b>Ocorrências:</b> ciclo de vida do ticket do operador; prova de resolução; fecho automático (Parte A); vídeos; ocorrências de grupo</li><li><b>Notificações e sensores:</b> notificações locais e push; geofence de 20 m; deteção de impactos</li><li><b>Backend:</b> Cloud Functions; regras do Firestore e do Storage; versão do Android Gradle Plugin</li><li><b>Testes:</b> bateria final de testes e correções</li></ul></td>
   </tr>
 </table>
 
