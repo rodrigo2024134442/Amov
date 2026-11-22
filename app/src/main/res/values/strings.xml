@@ -202,4 +202,7 @@
     <string name="proximity_title">Proximity alerts</string>
     <string name="proximity_text_foreground">Allow location so authors are told when you are less than 20 m from their incident.</string>
     <string name="proximity_text_background">Choose \"Allow all the time\" so the alerts also work with the app closed.</string>
+    <!-- Acessibilidade (rótulos das ações para o leitor de ecrã) -->
+    <string name="a11y_open_details">open details</string>
+    <string name="a11y_edit_category">edit category</string>
 </resources>

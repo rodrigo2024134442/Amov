@@ -129,7 +129,7 @@ Estado geral do trabalho prático de Arquiteturas Móveis 2026/27 (enunciado: `A
 | Ficha 10: escolher a localização no mapa, morada por geocodificação inversa, mapa no detalhe | `MapLocationPicker.kt`, `LocationUtils.kt`, `EditScreen.kt`, `ShowScreen.kt` | ✅ | Rodrigo | 2026-11-14 | Commit `256dcbd`. Falta a chave do Maps (lembretes) |
 | Perfil anónimo completo: 10 km, dashboard, lista e detalhe | ver sessão 03 | ✅ | Rodrigo (com o Claude) | 2026-11-16 | Commit `4cd6ef0` |
 | Operador, Parte A: ciclo do ticket com histórico, pedir dados, iniciar obra, resolver com prova, fecho automático, contactos do autor | `model/StatusChange.kt`, `Message.kt`, `data/MessagesRepository.kt` (só `send`), `ProofUploadWorker.kt`, `AutoCloseWorker.kt`, `ui/components/OperatorActions.kt`, `IncidentHistory.kt`, `TicketSection.kt`, `viewmodel/TicketViewModel.kt` | ✅ | Rodrigo | 2026-11-19 | Commit `176a2be`. O munícipe só edita/apaga em `OPEN` |
-| Parte B: ler mensagens, `MessagesSection`, `MessagesViewModel`, botão Reabrir, ligar no `partB = { }` do `MainActivity` | `MessagesRepository.kt` (`observeMessages`, `toMessage`), `viewmodel/MessagesViewModel.kt`, `ui/components/MessagesSection.kt`, `MainActivity.kt`, `strings.xml` | 🟡 | Marco (com o Claude) | 2026-11-21 | Testado no emulador API 35: mensagens nos dois sentidos, pedir dados, iniciar, resolver. **Falta testar o Reabrir.** Assinaturas partilhadas sem alterações |
+| Parte B: ler mensagens, `MessagesSection`, `MessagesViewModel`, botão Reabrir, ligar no `partB = { }` do `MainActivity` | `MessagesRepository.kt` (`observeMessages`, `toMessage`), `viewmodel/MessagesViewModel.kt`, `ui/components/MessagesSection.kt`, `MainActivity.kt`, `strings.xml` | ✅ | Marco (com o Claude) | 2026-11-22 | Testado no emulador API 35: mensagens nos dois sentidos, pedir dados, iniciar, resolver e reabrir. Assinaturas partilhadas sem alterações |
 
 ---
 
@@ -150,16 +150,16 @@ Estado confirmado pela leitura do código em 2026-11-16 (sessão 03); atualizado
 
 | Req. | O que se faz | Estado | Quem | Data | Notas |
 |---|---|---|---|---|---|
-| M-A | Registo: nome, e-mail, telefone, NIF (único), localização, foto opcional, opção "Deteção de Impactos"; dados validados; fica pendente | 🟡 | Marco | 2026-11-07 | **Falta a georreferenciação** (o operador vê "Localização por definir") |
+| M-A | Registo: nome, e-mail, telefone, NIF (único), localização, foto opcional, opção "Deteção de Impactos"; dados validados; fica pendente | ✅ | Marco / Rodrigo | 2026-11-22 | Localização no mapa (obrigatória), commit `bf3cba9`. Testado |
 | M-B | Login com e-mail e password, MFA e recuperação por e-mail | ✅ | Marco | 2026-11-07 | 2.º fator = app autenticadora (TOTP). Limitação para o relatório: a passagem do 2.º fator só fica guardada no telemóvel |
 | M-C | Editar perfil (sem alterar nome, NIF e localização) | ✅ | Marco | 2026-11-07 | Telefone, deteção de impactos e fotografia |
 | M-D | Acesso às funcionalidades do anónimo | ✅ | Rodrigo | 2026-11-16 | Separador "Painel" e separador "Públicas" na lista |
-| M-E1 | Abrir ocorrência: categoria ativa, situação, descrição, pelo menos 1 imagem ou vídeo, público ou privado | 🟡 | Marco / Rodrigo | 2026-11-14 | Funciona com imagens (até 3) e localização no mapa. **Faltam os vídeos**. O autor só edita e apaga em "Aberto" (Parte A) |
+| M-E1 | Abrir ocorrência: categoria ativa, situação, descrição, pelo menos 1 imagem ou vídeo, público ou privado | ✅ | Marco / Rodrigo | 2026-11-22 | Vídeos (galeria e câmara) e miniatura a partir de um frame, commit `bf3cba9`. Testado |
 | M-E2 | Lista das minhas ocorrências, com o estado | ✅ | Marco | 2026-11-07 | Separador "As minhas" |
 | M-E3 | Detalhe, com mensagens trocadas com a câmara | ✅ | Rodrigo / Marco | 2026-11-21 | Mensagens em tempo real (as próprias à direita), envio desativado em `CLOSED`. Testado com munícipe e operador |
-| M-E4 | Reabrir (até 5 dias depois de resolvida) | 🟡 | Marco | 2026-11-21 | Botão só para o autor com `canReopen`; justificação obrigatória (histórico + mensagem). Compila; **falta testar** |
-| M-F | Deteção de impactos (acelerómetro, eixo vertical) e sugestão de abrir ocorrência | ⬜ | | | |
-| M-G | Ocorrência de grupo: mesma categoria e situação, a menos de 10 m | ⬜ | | | |
+| M-E4 | Reabrir (até 5 dias depois de resolvida) | ✅ | Marco | 2026-11-22 | Botão só para o autor com `canReopen`; justificação obrigatória (histórico + mensagem). Testado: erro sem justificação; volta a Aberto com a justificação no histórico e nas mensagens |
+| M-F | Deteção de impactos (acelerómetro, eixo vertical) e sugestão de abrir ocorrência | ✅ | Rodrigo | 2026-11-22 | `ImpactDetector`. Testado no emulador (`adb emu sensor set acceleration`): diálogo e formulário pré-preenchido |
+| M-G | Ocorrência de grupo: mesma categoria e situação, a menos de 10 m | ✅ | Rodrigo | 2026-11-22 | `findGroupMatch`/`joinGroup` (followers); só públicas e de outro autor. Testado com 2 munícipes |
 
 ### I.3 Operador municipal
 
@@ -172,7 +172,7 @@ Estado confirmado pela leitura do código em 2026-11-16 (sessão 03); atualizado
 | O-E1 | Gerir categorias: criar, editar, ativar e desativar | ✅ | Marco | 2026-11-07 | |
 | O-E2 | Painel com todas as ocorrências (coordenadas, contactos, histórico, fotos e vídeos) | 🟡 | Rodrigo | 2026-11-19 | Coordenadas, contactos do autor (com botão Ligar) e histórico feitos. Faltam os vídeos |
 | O-E3 | Mudar o estado do ticket (com timestamp), pedir dados, iniciar trabalhos, carregar prova da conclusão | ✅ | Rodrigo | 2026-11-19 | `OperatorActions`, `TicketViewModel`; prova enviada pelo `ProofUploadWorker` (`incidents/{id}/proof.jpg`). Prova só com foto |
-| O-F | Alerta aos autores quando o operador está a menos de 20 m de uma ocorrência ativa | ⬜ | | | Localização em segundo plano |
+| O-F | Alerta aos autores quando o operador está a menos de 20 m de uma ocorrência ativa | ✅ | Rodrigo | 2026-11-22 | `GeofenceManager`/`GeofenceReceiver` grava `operatorNearbyAt`; o munícipe recebe a notificação. Testado no emulador com localização simulada (`cmd location providers set-test-provider-location`): o `geo fix` e as rotas do emulador não atualizavam a localização |
 
 ### II e III: Ciclo de vida do ticket e notificações
 
@@ -180,9 +180,9 @@ Estado confirmado pela leitura do código em 2026-11-16 (sessão 03); atualizado
 |---|---|---|---|---|---|
 | T1 | Estados: Aberto → Pedido de Informações → Em Resolução → Resolvido → Encerrado | ✅ | Rodrigo | 2026-11-19 | Transições validadas em `IncidentLifecycle.canTransition`; histórico com data, autor e nota |
 | T2 | Fecho automático 5 dias depois de resolvido | ✅ | Rodrigo | 2026-11-19 | `AutoCloseWorker`, de 6 em 6 horas e quando a app abre |
-| N1 | Notificação em cada mudança de estado | ⬜ | | | Alternativa sem servidor: notificações locais a partir dos snapshot listeners (justificar no relatório) |
+| N1 | Notificação em cada mudança de estado | ✅ | Rodrigo | 2026-11-22 | `NotificationsWatcher` (locais) + FCM/Cloud Functions. Testado (local) |
 | N2 | Notificação de mensagens (pedidos de informação e respostas) | ⬜ | | | |
-| N3 | Alerta de proximidade da equipa (geofence de 20 m) | ⬜ | | | |
+| N3 | Alerta de proximidade da equipa (geofence de 20 m) | ✅ | Rodrigo | 2026-11-22 | Ver O-F. Testado |
 | N4 | Aviso quando faltam 24 h para o fecho definitivo | ⬜ | | | |
 
 ### IV: Firebase e trabalho em segundo plano
@@ -194,7 +194,7 @@ Estado confirmado pela leitura do código em 2026-11-16 (sessão 03); atualizado
 | F3 | Cloud Firestore com persistência offline (ocorrências, categorias, mensagens) | 🟡 | Marco / Rodrigo | 2026-11-19 | Ocorrências, categorias, utilizadores, `stats` e envio de mensagens. Falta ler as mensagens (Parte B) |
 | F4 | Compressão de imagens e thumbnails antes do envio | ✅ | Marco | 2026-11-07 | `ImageUtils` (1600 px e 320 px) |
 | F5 | Envio de fotos e vídeos para o Firebase Storage pelo WorkManager, só com rede | 🟡 | Marco | 2026-11-07 | Só fotos |
-| F6 | Firebase Cloud Messaging (push) | ⬜ | | | |
+| F6 | Firebase Cloud Messaging (push) | ✅ | Rodrigo / Marco | 2026-11-22 | Cloud Functions do Rodrigo (`functions/`) publicadas pelo Marco em europe-west1 (Node 22: o Node 20 foi desativado a 2026-10-30): `onIncidentCreated`, `onIncidentUpdated`, `closeResolvedIncidents`. Limpeza de imagens: 15 dias. Push testado com a app fechada (2026-11-22). Foi preciso publicar o `firestore.rules` e o `storage.rules` do Rodrigo (as regras na consola não deixavam gravar o `fcmToken`) |
 
 ### V: Requisitos gerais
 
@@ -204,9 +204,9 @@ Estado confirmado pela leitura do código em 2026-11-16 (sessão 03); atualizado
 | G2 | Arquitetura MVVM, composables stateless e stateful | ✅ | Rodrigo / Marco | | Ecrãs stateless, estado nos ViewModels, factories |
 | G3 | Permissões em tempo de execução: localização (primeiro e segundo plano), câmara, notificações | 🟡 | Rodrigo | 2026-11-16 | Localização em primeiro plano (anónimo). Faltam segundo plano e notificações; a câmara usa o intent do sistema |
 | G4 | Inglês por omissão e português conforme o dispositivo | ✅ | | | Os nomes das categorias são dados (ficam como o operador os escreve) |
-| G5 | Portrait e Landscape | 🟡 | Rodrigo | 2026-11-16 | Barra lateral em landscape; falta testar todos os ecrãs |
+| G5 | Portrait e Landscape | ✅ | Rodrigo / Marco | 2026-11-22 | Barra lateral em landscape; lista, dashboard, detalhe, formulário e perfil testados rodados (scroll, sem cortes). Detalhe em landscape dividido 50/50 (detalhes | mapa), como no ShowScreen da aula P10 |
 | G6 | Navegação; barras de topo e botões flutuantes conforme o contexto | ✅ | Rodrigo | 2026-11-16 | Barra Painel / Ocorrências; barra de topo e FAB mudam com o ecrã e o perfil |
-| G7 | Acessibilidade | 🟡 | | | `contentDescription` nos ícones, cartões dos KPIs lidos de uma vez. Falta rever com o TalkBack |
+| G7 | Acessibilidade | ✅ | Rodrigo / Marco | 2026-11-22 | `contentDescription` em todos os botões de ícone e imagens; KPIs e histórico lidos de uma vez (`mergeDescendants`); rótulos das ações nos cartões ("ver detalhes", "editar categoria"); título das mensagens como cabeçalho. Testado com o TalkBack (cartões, mensagens, indicadores) |
 
 ### VI: Entrega
 

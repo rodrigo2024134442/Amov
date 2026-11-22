@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<title>CityFix: Relatório Técnico</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.45; color: #1f2933; }
+  h1 { font-size: 22pt; margin: 0 0 4px; color: #1e3a5f; }
+  h2 { font-size: 14pt; color: #1e3a5f; border-bottom: 2px solid #c9d6e6; padding-bottom: 3px; margin-top: 22px; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; color: #2d4f7c; margin: 14px 0 4px; page-break-after: avoid; }
+  p { margin: 5px 0; text-align: justify; }
+  ul { margin: 4px 0 6px 18px; padding: 0; }
+  li { margin: 2px 0; }
+  code { font-family: Consolas, monospace; font-size: 9.5pt; background: #eef2f7; padding: 0 3px; border-radius: 3px; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 9.5pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #c9d6e6; padding: 4px 6px; vertical-align: top; text-align: left; }
+  th { background: #e6edf5; }
+  .cover { text-align: center; padding-top: 70mm; page-break-after: always; }
+  .cover .sub { font-size: 13pt; color: #52606d; margin: 4px 0; }
+  .cover table { width: 60%; margin: 30px auto 0; font-size: 11pt; }
+  .fig { text-align: center; margin: 8px 0 12px; page-break-inside: avoid; }
+  .fig img { max-width: 100%; border: 1px solid #c9d6e6; border-radius: 4px; }
+  .fig .cap { font-size: 9pt; color: #52606d; margin-top: 3px; }
+  .note { background: #f4f7fb; border-left: 4px solid #8aa6c8; padding: 6px 10px; margin: 8px 0; }
+  .ok { color: #1b7f3b; font-weight: 600; }
+  .part { color: #b7791f; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>CityFix</h1>
+  <p class="sub">Relatório técnico do trabalho prático</p>
+  <p class="sub">Arquiteturas Móveis · Engenharia Informática · ISEC · 2026/27</p>
+  <table>
+    <tr><th>Aluno</th><th>Número</th></tr>
+    <tr><td>Marco Marcelo</td><td>2024114817</td></tr>
+    <tr><td>Rodrigo</td><td>2024134442</td></tr>
+  </table>
+  <p class="sub" style="margin-top:30px">Entrega: 22 de novembro de 2026</p>
+</div>
+
+<h2>1. Introdução</h2>
+<p>O CityFix é uma aplicação Android, escrita em Kotlin com Jetpack Compose, para a participação de ocorrências urbanas no município de Coimbra. Os munícipes registam, georreferenciam e acompanham problemas no espaço público; os operadores municipais gerem as categorias, validam os munícipes e conduzem cada ocorrência (ticket) ao longo do seu ciclo de vida, com prova fotográfica ou em vídeo da resolução.</p>
+<p>O backend é o Firebase: Authentication, Cloud Firestore (com cache offline), Storage, Cloud Messaging e Cloud Functions. O trabalho de rede pesado (envio de fotografias e vídeos, fecho automático, avisos) corre em segundo plano com o WorkManager.</p>
+<p>Este relatório descreve as soluções técnicas adotadas, as opções de implementação tomadas onde o enunciado deixava margem, os testes realizados e as oportunidades de melhoria.</p>
+
+<h2>2. Arquitetura</h2>
+<h3>2.1 MVVM com segmentação stateless / stateful</h3>
+<p>A aplicação segue a arquitetura usada nas aulas práticas (ContactsApp, fichas P08 a P10), adaptada ao domínio do CityFix:</p>
+<ul>
+  <li><b>Modelo</b> (<code>model/</code>): classes de dados imutáveis (<code>Incident</code>, <code>User</code>, <code>Category</code>, <code>Message</code>, <code>StatusChange</code>, <code>Session</code>) e as regras do ciclo de vida (<code>IncidentLifecycle</code>).</li>
+  <li><b>Dados</b> (<code>data/</code>): repositórios que encapsulam o Firebase (<code>AuthRepository</code>, <code>IncidentsRepository</code>, <code>MessagesRepository</code>, <code>CategoriesRepository</code>, <code>StatsRepository</code>, <code>LocationRepository</code>), os <i>mappers</i> entre objetos Kotlin e documentos Firestore e os <i>workers</i> do WorkManager. Os repositórios são criados uma vez na classe <code>CityFixApp</code> (Application) e partilhados.</li>
+  <li><b>ViewModels</b> (<code>viewmodel/</code>): expõem o estado como <code>StateFlow</code>, criados por <i>factories</i>. Os ViewModels globais (sessão, lista) estão associados à Activity; os de um ecrã (formulário, ticket, mensagens) estão associados à rota de navegação, sendo destruídos ao sair do ecrã. O estado que tem de sobreviver à recriação (texto escrito, diálogos abertos, fotografia escolhida) fica no <code>SavedStateHandle</code>.</li>
+  <li><b>Interface</b> (<code>ui/</code>): ecrãs e componentes Compose <b>stateless</b>, que recebem dados e <i>callbacks</i>; a <code>MainActivity</code> faz a ligação (<b>stateful</b>) entre ViewModels e ecrãs.</li>
+</ul>
+<h3>2.2 Navegação e sessão</h3>
+<p>A navegação usa rotas tipadas (<code>@Serializable</code>, Navigation Compose). Antes da navegação, a <code>MainActivity</code> observa o estado da sessão, uma <i>sealed interface</i> com os estados <code>Loading</code>, <code>Guest</code>, <code>AwaitingMfa</code>, <code>PendingValidation</code> e <code>Active</code>, e mostra o ecrã adequado. O <code>AuthRepository</code> calcula este estado combinando o utilizador do Firebase Auth, a conclusão do 2.º fator neste telemóvel e o perfil no Firestore. As barras de topo, o botão flutuante e a barra de navegação (inferior em portrait, lateral em landscape) mudam com o ecrã e com o perfil.</p>
+<h3>2.3 Organização dos pacotes</h3>
+<table>
+  <tr><th>Pacote</th><th>Conteúdo</th></tr>
+  <tr><td><code>model</code></td><td>Entidades, enumerados (estado, situação, alcance, perfil) e regras do ciclo de vida</td></tr>
+  <tr><td><code>data</code></td><td>Repositórios, mappers Firestore, workers (envio de media e prova, fecho automático), envio do código MFA</td></tr>
+  <tr><td><code>viewmodel</code></td><td>ViewModels e factories (sessão, login, registo, lista, formulário, ticket, mensagens, dashboard, área do anónimo, operador)</td></tr>
+  <tr><td><code>ui/screens</code>, <code>ui/components</code></td><td>Ecrãs e componentes Compose stateless</td></tr>
+  <tr><td><code>notifications</code>, <code>geofence</code>, <code>sensors</code></td><td>Notificações locais e push, geofences do operador, deteção de impactos</td></tr>
+  <tr><td><code>utils</code></td><td>Ficheiros, compressão de imagem, localização e validações</td></tr>
+</table>
+
+<h2>3. Dados no Firebase</h2>
+<table>
+  <tr><th>Coleção / caminho</th><th>Conteúdo</th></tr>
+  <tr><td><code>users/{uid}</code></td><td>Perfil: nome, e-mail, telefone, NIF, perfil, estado (PENDING/ACTIVE), localização, deteção de impactos, fotografia, token FCM</td></tr>
+  <tr><td><code>nifs/{PERFIL_NIF}</code></td><td>Reserva do NIF, para garantir que é único por perfil</td></tr>
+  <tr><td><code>categories/{id}</code></td><td>Tipologias definidas pelo município (nome, ativa/inativa)</td></tr>
+  <tr><td><code>incidents/{id}</code></td><td>Ocorrência: categoria, situação, descrição, alcance, coordenadas e morada, media e miniatura, estado, histórico, prova, seguidores (grupo), proximidade da equipa</td></tr>
+  <tr><td><code>incidents/{id}/messages</code></td><td>Mensagens entre o munícipe e os serviços camarários</td></tr>
+  <tr><td><code>stats/global</code></td><td>Indicadores do dashboard (contadores e tempo de reparação), atualizados com <code>FieldValue.increment()</code> no mesmo <i>batch</i> que a ocorrência</td></tr>
+  <tr><td><code>mail/{id}</code></td><td>Pedidos de envio do código do 2.º fator (extensão Trigger Email)</td></tr>
+  <tr><td>Storage <code>incidents/{id}/…</code>, <code>users/{uid}/avatar.jpg</code></td><td>Fotografias, vídeos, miniaturas, prova de resolução e fotografia de perfil</td></tr>
+</table>
+<p><b>Offline.</b> As leituras usam <i>snapshot listeners</i> transformados em <code>Flow</code> (<code>callbackFlow</code>), servidos pela cache local do Firestore. As escritas são feitas sem esperar pela resposta do servidor: sem rede ficam na fila local, aparecem logo na interface e são sincronizadas quando a ligação volta. As exceções são as operações em que o utilizador tem de saber o resultado (registo, login, envio do código), que aguardam a confirmação.</p>
+<p><b>Segurança.</b> As regras do Firestore e do Storage (<code>firestore.rules</code>, <code>storage.rules</code>) aplicam as permissões por perfil: cada utilizador só lê o seu perfil (o operador lê todos); o munícipe só altera telefone, deteção de impactos, fotografia e token; o operador só muda o estado (validação); as ocorrências privadas só são lidas pelo autor e pelos operadores; uma ocorrência encerrada não admite alterações nem mensagens; o operador só pode registar-se com e-mail do domínio da autarquia.</p>
+
+<h2>4. Perfis e autenticação</h2>
+<h3>4.1 Registo</h3>
+<ul>
+  <li>Validação dos dados no formulário (e-mail, telefone com 9 dígitos, NIF com 9 dígitos, password), com mensagens de erro junto de cada campo.</li>
+  <li><b>NIF único por perfil</b>: a reserva <code>nifs/{PERFIL_NIF}</code> e o perfil são gravados numa <b>transação</b>; se o NIF já existir, nada é gravado e a conta acabada de criar é apagada.</li>
+  <li><b>Perfil pelo domínio do e-mail</b>: quem se regista com e-mail do domínio da autarquia (<code>AppConfig.OPERATOR_EMAIL_DOMAIN</code>) fica operador e ativo; os outros ficam munícipes pendentes até um operador os validar (nome, localização e NIF).</li>
+  <li>O munícipe escolhe a localização no mapa (obrigatória) e se quer a deteção de impactos; a fotografia de perfil é opcional (galeria ou câmara, comprimida a 512 px).</li>
+</ul>
+<h3>4.2 Duplo fator (MFA) e recuperação</h3>
+<p>Depois da password, a aplicação gera um código de 6 dígitos (<code>SecureRandom</code>) e envia-o para o e-mail da conta: grava um documento em <code>mail/</code> e a extensão oficial <b>Trigger Email from Firestore</b> envia-o por SMTP. O código é válido 10 minutos e admite 5 tentativas; no telemóvel guarda-se apenas o resumo SHA-256 (com o uid), nunca o código em claro. Depois de confirmado, o 2.º fator fica registado no dispositivo, cumprindo a sessão mantida em cache após a autenticação inicial; volta a ser pedido depois de sair da sessão.</p>
+<p>A recuperação de credenciais usa o e-mail de reposição do próprio Firebase Authentication.</p>
+<div class="note"><b>Opção tomada.</b> O Firebase Authentication só oferece MFA por SMS ou TOTP (este último exige o Identity Platform). Experimentámos primeiro o TOTP com app autenticadora (QR code), mas optámos pelo código por e-mail por ser mais simples de usar e gratuito. A limitação é que a geração e a verificação do código são feitas no cliente; numa versão de produção deveriam passar para uma Cloud Function.</div>
+
+<h2>5. Ocorrências e ciclo de vida do ticket</h2>
+<h3>5.1 Abertura, listagem e detalhe</h3>
+<ul>
+  <li>Abertura com categoria (só as ativas), situação (Dano, Avaria, Destruição, Roubo), título, descrição, localização no mapa com morada por geocodificação inversa, alcance público/privado e pelo menos uma fotografia ou vídeo (até 3, da galeria ou da câmara).</li>
+  <li>O munícipe vê as suas ocorrências (com estado) e as públicas; o anónimo só as públicas ativas; o operador todas.</li>
+  <li>No detalhe, o autor e o operador veem as coordenadas e o mapa exato; os restantes veem "autor oculto" e uma <b>zona aproximada</b> (centro arredondado a ~1 km, zoom afastado, sem marcador e sem gestos).</li>
+  <li>O operador vê os contactos do autor (com botão para ligar) e o histórico completo com fotografias e vídeos.</li>
+</ul>
+<h3>5.2 Estados</h3>
+<p>As transições válidas estão concentradas em <code>IncidentLifecycle</code>: Aberto → Pedido de Informações → Em Resolução → Resolvido → Encerrado, com regresso a Aberto por reabertura. Cada mudança acrescenta ao <b>histórico</b> uma entrada com estado, <i>timestamp</i>, autor e nota (<code>arrayUnion</code>, só os campos do ciclo de vida, funcionando offline).</p>
+<ul>
+  <li><b>Pedido de informações</b> nos dois sentidos: o operador pede dados (a pergunta segue como mensagem) e o munícipe pode pedir esclarecimentos; a resposta devolve o ticket ao estado anterior.</li>
+  <li><b>Resolver</b> exige fotografia ou vídeo comprovativo, enviado pelo <code>ProofUploadWorker</code>.</li>
+  <li><b>Reabrir</b>: só o autor, até 5 dias depois da resolução, com justificação obrigatória (fica no histórico e nas mensagens).</li>
+  <li><b>Fecho automático</b> ao fim de 5 dias: no telemóvel pelo <code>AutoCloseWorker</code> (de 6 em 6 horas e ao abrir a app) e no servidor por uma Cloud Function agendada, para acontecer mesmo que ninguém abra a app. Encerrado, o ticket fica bloqueado (regras do Firestore e interface).</li>
+</ul>
+<h3>5.3 Mensagens</h3>
+<p>As mensagens ficam na subcoleção <code>incidents/{id}/messages</code> e são lidas em tempo real, ordenadas por <code>timestamp</code>. As do próprio utilizador aparecem à direita e as da outra parte à esquerda, com o perfil e a hora. Numa ocorrência encerrada o campo de escrita desaparece.</p>
+<h3>5.4 Ocorrências de grupo</h3>
+<p>Ao criar uma ocorrência, procura-se uma ocorrência pública ativa de <b>outro autor</b> com a mesma categoria e situação a menos de 10 m. Se existir, o munícipe passa a acompanhá-la (lista <code>followers</code>), a sua descrição segue como mensagem e não é criada uma ocorrência repetida. Os seguidores recebem as mesmas notificações que o autor.</p>
+
+<h2>6. Multimédia e WorkManager</h2>
+<ul>
+  <li>Fotografias pela câmara (<code>TakePicture</code> com <code>FileProvider</code>) ou pelo <i>Photo Picker</i>; vídeos pela câmara ou galeria; mostradas com Coil 3.</li>
+  <li><b>Compressão local</b> antes do envio: imagem redimensionada a 1600 px (JPEG) e <b>miniatura</b> de 320 px; a rotação EXIF é corrigida. Para vídeos, a miniatura é gerada a partir de um <i>frame</i>.</li>
+  <li>O envio para o Storage é delegado no <b>WorkManager</b> (<code>MediaUploadWorker</code>, <code>ProofUploadWorker</code>) com a restrição <code>NetworkType.CONNECTED</code>: sem rede, o trabalho espera e é retomado automaticamente.</li>
+  <li>Enquanto o envio não termina, a interface mostra as cópias locais; depois, os endereços do Storage.</li>
+</ul>
+
+<h2>7. Localização, mapas, geofence e sensores</h2>
+<ul>
+  <li><b>Área do anónimo</b>: o <code>LocationRepository</code> pede a localização e verifica a distância à Praça da República (raio de 10 km); fora da área, sem permissão ou sem GPS, é mostrado um ecrã de bloqueio com "Tentar novamente", "Abrir definições" e "Iniciar sessão".</li>
+  <li><b>Mapas</b> com Maps Compose: escolha da localização no formulário e no registo, mapa no detalhe. A chave da API fica fora do Git, em <code>secrets.properties</code>, e entra no Manifest por <code>manifestPlaceholders</code>; está restrita ao Maps SDK for Android e à assinatura da aplicação.</li>
+  <li><b>Geofence de 20 m</b>: no telemóvel do operador são registadas geofences nas ocorrências ativas (prioridade às que estão Em Resolução). Ao entrar numa, o <code>GeofenceReceiver</code> grava a hora em <code>operatorNearbyAt</code>; os autores e seguidores recebem o alerta de que a equipa camarária está na zona. Requer localização em segundo plano ("Permitir sempre").</li>
+  <li><b>Deteção de impactos</b> (<code>ImpactDetector</code>): o acelerómetro passa por um filtro passa-baixo que estima a gravidade; a aceleração sem gravidade é projetada na vertical e, acima de 12 m/s², é sugerido ao munícipe abrir uma ocorrência com o formulário já preenchido (categoria de vias, situação Dano, localização atual). Há um intervalo mínimo de 30 s entre sugestões. Só ativo se o munícipe o escolheu no perfil.</li>
+</ul>
+
+<h2>8. Notificações</h2>
+<p>Combinámos dois mecanismos:</p>
+<ul>
+  <li><b>Locais</b> (<code>NotificationsWatcher</code>): com a app em execução, os <i>snapshot listeners</i> detetam mudanças de estado, mensagens novas, proximidade da equipa e, para o operador, ocorrências novas, pedidos de esclarecimento e reaberturas. O último estado visto fica guardado, por isso as mudanças ocorridas com a app fechada também são notificadas ao abri-la. O aviso das <b>24 horas antes do fecho</b> é agendado com o WorkManager (<code>ClosingReminderWorker</code>).</li>
+  <li><b>Remotas</b> (FCM): Cloud Functions (<code>onIncidentCreated</code>, <code>onIncidentUpdated</code>, <code>closeResolvedIncidents</code>, região europe-west1, Node 22) enviam <i>push</i> para o token guardado no perfil, cobrindo o caso da app fechada.</li>
+</ul>
+
+<h2>9. Requisitos gerais</h2>
+<ul>
+  <li><b>Permissões em tempo de execução</b>: localização (primeiro e segundo plano) e notificações são pedidas no momento em que são necessárias, com explicação e alternativa quando recusadas. A <b>câmara</b> é usada através da aplicação de câmara do sistema (contratos <code>TakePicture</code> / <code>CaptureVideo</code>), que não exige a permissão <code>CAMERA</code>: a aplicação não acede diretamente ao hardware, o que é a opção recomendada pela Google por pedir menos permissões ao utilizador.</li>
+  <li><b>Idiomas</b>: inglês por omissão (<code>values/</code>) e português (<code>values-pt/</code>), conforme o idioma do dispositivo; nenhum texto está escrito no código.</li>
+  <li><b>Portrait e landscape</b>: barra de navegação lateral em landscape; o detalhe da ocorrência divide o ecrã 50/50, com os detalhes à esquerda (com scroll) e o mapa à direita, como no <code>ShowScreen</code> da ficha P10 (<code>LocalConfiguration</code> e <code>weight(1f)</code>). Todos os ecrãs têm scroll, para não cortar conteúdo.</li>
+  <li><b>Acessibilidade</b>: descrições em todos os botões de ícone e imagens, cartões de indicadores e entradas do histórico lidos de uma vez (<code>mergeDescendants</code>), ações com rótulo para o leitor de ecrã ("ver detalhes", "editar categoria"), títulos marcados como cabeçalho e áreas de toque com pelo menos 48 dp.</li>
+</ul>
+
+<div class="fig"><img src="img/detalhe_landscape.png" style="width:88%"><div class="cap">Figura 1. Detalhe da ocorrência em landscape: detalhes à esquerda e mapa à direita</div></div>
+<div class="fig"><img src="img/dashboard_landscape.png" style="width:88%"><div class="cap">Figura 2. Dashboard em landscape, com a barra de navegação lateral</div></div>
+
+<h2>10. Testes realizados</h2>
+<p>Testámos no emulador (Android 7 e Android 16 com Google Play) com dois munícipes e um operador reais:</p>
+<table>
+  <tr><th>Área</th><th>Resultado</th></tr>
+  <tr><td>Registo, validação de munícipe, login com código por e-mail, recuperação da password</td><td class="ok">OK</td></tr>
+  <tr><td>Ocorrência com fotografia e com vídeo, miniaturas, offline (criação sem rede e envio posterior)</td><td class="ok">OK</td></tr>
+  <tr><td>Ciclo completo: pedir dados, resposta, iniciar, resolver com prova, reabrir (com e sem justificação)</td><td class="ok">OK</td></tr>
+  <tr><td>Mensagens nos dois sentidos</td><td class="ok">OK</td></tr>
+  <tr><td>Ocorrência de grupo com dois munícipes</td><td class="ok">OK</td></tr>
+  <tr><td>Notificações locais e push com a app fechada</td><td class="ok">OK</td></tr>
+  <tr><td>Deteção de impactos (sensor simulado com <code>adb emu sensor</code>)</td><td class="ok">OK</td></tr>
+  <tr><td>Geofence de 20 m (localização simulada com <code>cmd location providers</code>)</td><td class="ok">OK</td></tr>
+  <tr><td>Landscape nos ecrãs principais; inglês e português</td><td class="ok">OK</td></tr>
+  <tr><td>Leitor de ecrã (TalkBack): cartões, mensagens e indicadores do dashboard</td><td class="ok">OK</td></tr>
+</table>
+<div class="note">No emulador, as rotas e o <code>geo fix</code> não atualizaram a localização usada pelas geofences; o teste foi feito com um fornecedor de localização de teste. Num telemóvel físico este passo não é necessário.</div>
+
+<h2>11. Opções de implementação</h2>
+<ul>
+  <li><b>Domínio da autarquia</b>: usámos <code>@isec.pt</code>, porque é o domínio com caixas de correio reais a que temos acesso (necessárias para o código por e-mail). Numa câmara real seria o domínio municipal; está num só sítio (<code>AppConfig</code> e regras).</li>
+  <li><b>Validação do NIF</b>: verificação simples de 9 dígitos, como indicado nas aulas, mais a unicidade por perfil.</li>
+  <li><b>Categorias</b>: são dados do município, por isso o nome não é traduzido. Para testes há um botão "Criar categorias de exemplo".</li>
+  <li><b>Edição pelo autor</b>: o munícipe só edita ou apaga a ocorrência enquanto está Aberta, para preservar a rastreabilidade depois de a câmara intervir.</li>
+  <li><b>Indicadores do dashboard</b>: guardados num documento agregado (<code>stats/global</code>) em vez de contar todas as ocorrências em cada leitura, o que permite ao anónimo lê-los sem acesso às ocorrências privadas.</li>
+  <li><b>Fecho automático duplicado</b> (cliente e servidor): o cliente funciona sem backend extra e offline; o servidor garante o fecho e o aviso das 24 h com a app fechada.</li>
+</ul>
+
+<h2>12. Limitações e oportunidades de melhoria</h2>
+<ul>
+  <li>Passar a geração e verificação do código MFA para uma Cloud Function (hoje é feita no cliente), ou usar o MFA nativo do Identity Platform.</li>
+  <li>Algumas operações sensíveis são feitas no cliente e protegidas pelas regras (por exemplo, contadores do dashboard); seriam mais robustas em Cloud Functions.</li>
+  <li>Validação do NIF com o dígito de controlo oficial.</li>
+  <li>Teste completo com o TalkBack e com tamanhos de letra grandes; contraste das cores revisto.</li>
+  <li>Layouts em duas colunas noutros ecrãs (formulário, perfil) em landscape e em tablets.</li>
+  <li>Testes automáticos (unitários do <code>IncidentLifecycle</code> e dos validadores, e de interface).</li>
+  <li>Paginação das listas para municípios com muitas ocorrências e procura geográfica com <i>geohash</i> para os grupos.</li>
+  <li>Atualizar as APIs do FCM marcadas como <i>deprecated</i> e a biblioteca <code>firebase-functions</code>.</li>
+</ul>
+
+<h2>13. Execução do projeto</h2>
+<ul>
+  <li>Abrir a pasta do projeto no Android Studio e sincronizar o Gradle. O <code>google-services.json</code> está incluído.</li>
+  <li>A chave do Google Maps vai no ficheiro <code>secrets.properties</code> (raiz do projeto, incluído no ZIP). A chave está restrita à assinatura de debug dos autores; noutro computador é preciso acrescentar o SHA-1 desse computador na consola Google Cloud, ou os mapas aparecem cinzentos.</li>
+  <li>Para entrar como operador, registar uma conta com e-mail <code>@isec.pt</code>; como munícipe, qualquer e-mail real (o código do 2.º fator é enviado por e-mail). O munícipe tem de ser validado por um operador.</li>
+  <li>As Cloud Functions estão em <code>functions/</code> e as regras em <code>firestore.rules</code> e <code>storage.rules</code> (publicadas com <code>firebase deploy</code>).</li>
+</ul>
+
+<h2>14. Divisão do trabalho</h2>
+<table>
+  <tr><th>Marco (2024114817)</th><th>Rodrigo (2024134442)</th></tr>
+  <tr>
+    <td>Adaptação da arquitetura das aulas P08 e P09; integração com o Firebase (Firestore offline, Storage, WorkManager); autenticação, perfis, MFA, validação de munícipes e categorias; mensagens e reabertura; chave do Maps; publicação das Cloud Functions e regras; testes</td>
+    <td>Modelo inicial e navegação; mapas (ficha 10); perfil anónimo e dashboard; ciclo de vida do ticket do operador e prova de resolução; fecho automático; vídeos; ocorrências de grupo; deteção de impactos; notificações locais e push; geofence; Cloud Functions e regras</td>
+  </tr>
+</table>
+
+</body>
+</html>

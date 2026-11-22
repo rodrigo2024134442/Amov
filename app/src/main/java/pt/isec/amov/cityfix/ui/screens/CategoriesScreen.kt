@@ -94,7 +94,7 @@ fun CategoriesScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { editingId = category.id }
+                        .clickable(onClickLabel = stringResource(R.string.a11y_edit_category)) { editingId = category.id }
                 ) {
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(modifier = Modifier.weight(1f)) {

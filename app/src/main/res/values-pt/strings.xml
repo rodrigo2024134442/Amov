@@ -201,4 +201,7 @@
     <string name="proximity_title">Alertas de proximidade</string>
     <string name="proximity_text_foreground">Permita a localização para os autores serem avisados quando estiver a menos de 20 m da ocorrência.</string>
     <string name="proximity_text_background">Escolha \"Permitir sempre\" para os alertas funcionarem também com a app fechada.</string>
+    <!-- Acessibilidade (rótulos das ações para o leitor de ecrã) -->
+    <string name="a11y_open_details">ver detalhes</string>
+    <string name="a11y_edit_category">editar categoria</string>
 </resources>

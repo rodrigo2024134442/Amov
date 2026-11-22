@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import android.content.res.Configuration
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -34,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.google.maps.android.compose.Circle
@@ -55,6 +58,8 @@ import pt.isec.amov.cityfix.ui.components.label
  * As coordenadas e o mapa Google Maps só aparecem ao autor e ao operador (Ficha 10).
  * Os outros (anónimo, enunciado I.1.C) veem só uma zona aproximada: mapa com zoom afastado,
  * sem marcador, com as coordenadas arredondadas e sem poder aproximar.
+ * Em landscape (como no ShowScreen da aula P10): Row 50/50, com os detalhes à esquerda (com scroll)
+ * e o mapa à direita, com toda a altura. Em portrait: uma só coluna com scroll.
  * [extraContent] é um espaço no fim do ecrã para as secções do ciclo de vida: a MainActivity
  * põe aqui o TicketSection (Parte A) e a secção de mensagens (Parte B), sem mexer neste ficheiro.
  */
@@ -122,14 +127,12 @@ fun ShowScreen(
             }
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val hasCoordinates = incident.latitude != null && incident.longitude != null
+        val hasMap = hasCoordinates && (showLocation || showApproximateMap)
+
+        // Detalhes da ocorrência (fotografias, textos, autor oculto)
+        val detailsContent: @Composable ColumnScope.() -> Unit = {
             if (incident.displayMedia.isNotEmpty()) {
                 IncidentPhotoGallery(photos = incident.displayMedia)
             }
@@ -171,14 +174,26 @@ fun ShowScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                if (incident.latitude != null && incident.longitude != null) {
+                if (!hasCoordinates) {
+                    Text(
+                        text = stringResource(R.string.no_coordinates),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            } else if (showApproximateMap) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(Icons.Default.PersonOff, contentDescription = null)
+                    Text(stringResource(R.string.author_hidden), style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
+
+        // Mapa: exato (autor e operador) ou zona aproximada (os outros). Recebe o tamanho de fora.
+        val mapContent: @Composable (Modifier) -> Unit = { mapModifier ->
+            if (hasCoordinates) {
+                if (showLocation) {
                     val incidentLatLng = LatLng(incident.latitude, incident.longitude)
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                    ) {
+                    Card(modifier = mapModifier.clip(RoundedCornerShape(12.dp))) {
                         GoogleMap(
                             modifier = Modifier.fillMaxSize(),
                             cameraPositionState = rememberCameraPositionState {
@@ -194,22 +209,57 @@ fun ShowScreen(
                             )
                         }
                     }
-                } else {
-                    Text(
-                        text = stringResource(R.string.no_coordinates),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            } else if (showApproximateMap) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Icon(Icons.Default.PersonOff, contentDescription = null)
-                    Text(stringResource(R.string.author_hidden), style = MaterialTheme.typography.bodyMedium)
-                }
-                if (incident.latitude != null && incident.longitude != null) {
-                    ApproximateAreaMap(incident.latitude, incident.longitude)
+                } else if (showApproximateMap) {
+                    ApproximateAreaMap(incident.latitude, incident.longitude, mapModifier)
                 }
             }
-            extraContent()
+        }
+
+        if (isLandscape && hasMap) {
+            // Landscape: detalhes (com scroll) à esquerda e mapa à direita, 50/50
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    detailsContent()
+                    extraContent()
+                }
+                mapContent(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                )
+            }
+        } else {
+            // Portrait (ou sem mapa): uma só coluna com scroll
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                detailsContent()
+                if (hasMap) {
+                    mapContent(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(if (showLocation) 200.dp else 224.dp)
+                    )
+                }
+                extraContent()
+            }
         }
     }
 }
@@ -219,41 +269,43 @@ fun ShowScreen(
  * zoom afastado fixo, um círculo em vez do marcador e todos os gestos desligados.
  */
 @Composable
-private fun ApproximateAreaMap(latitude: Double, longitude: Double) {
+private fun ApproximateAreaMap(latitude: Double, longitude: Double, modifier: Modifier = Modifier) {
     val center = remember(latitude, longitude) {
         LatLng(Math.round(latitude * 100) / 100.0, Math.round(longitude * 100) / 100.0)
     }
     val fill = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
     val stroke = MaterialTheme.colorScheme.primary
-    Text(stringResource(R.string.label_approximate_area), style = MaterialTheme.typography.labelMedium)
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .clip(RoundedCornerShape(12.dp))
-    ) {
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = rememberCameraPositionState {
-                position = CameraPosition.fromLatLngZoom(center, APPROXIMATE_ZOOM)
-            },
-            uiSettings = MapUiSettings(
-                zoomControlsEnabled = false,
-                zoomGesturesEnabled = false,
-                scrollGesturesEnabled = false,
-                rotationGesturesEnabled = false,
-                tiltGesturesEnabled = false,
-                mapToolbarEnabled = false,
-                myLocationButtonEnabled = false
-            )
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(stringResource(R.string.label_approximate_area), style = MaterialTheme.typography.labelMedium)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .clip(RoundedCornerShape(12.dp))
         ) {
-            Circle(
-                center = center,
-                radius = APPROXIMATE_RADIUS_METERS,
-                fillColor = fill,
-                strokeColor = stroke,
-                strokeWidth = 2f
-            )
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = rememberCameraPositionState {
+                    position = CameraPosition.fromLatLngZoom(center, APPROXIMATE_ZOOM)
+                },
+                uiSettings = MapUiSettings(
+                    zoomControlsEnabled = false,
+                    zoomGesturesEnabled = false,
+                    scrollGesturesEnabled = false,
+                    rotationGesturesEnabled = false,
+                    tiltGesturesEnabled = false,
+                    mapToolbarEnabled = false,
+                    myLocationButtonEnabled = false
+                )
+            ) {
+                Circle(
+                    center = center,
+                    radius = APPROXIMATE_RADIUS_METERS,
+                    fillColor = fill,
+                    strokeColor = stroke,
+                    strokeWidth = 2f
+                )
+            }
         }
     }
 }

@@ -3,7 +3,7 @@
   "description": "Cloud Functions do CityFix: notificações push (FCM) e fecho automático das ocorrências",
   "main": "index.js",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "dependencies": {
     "firebase-admin": "^12.7.0",

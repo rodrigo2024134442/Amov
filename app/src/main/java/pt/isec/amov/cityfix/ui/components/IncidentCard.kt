@@ -33,7 +33,8 @@ fun IncidentCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            // Acessibilidade: o leitor de ecrã anuncia a ação ("ver detalhes")
+            .clickable(onClickLabel = stringResource(R.string.a11y_open_details), onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

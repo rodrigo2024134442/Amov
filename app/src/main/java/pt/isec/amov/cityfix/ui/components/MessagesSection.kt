@@ -26,6 +26,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pt.isec.amov.cityfix.R
@@ -53,7 +55,9 @@ fun MessagesSection(
             Text(
                 stringResource(R.string.messages_title),
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                // Acessibilidade: o TalkBack pode saltar de cabeçalho em cabeçalho
+                modifier = Modifier.semantics { heading() }
             )
             if (messages.isEmpty()) {
                 Text(
@@ -101,7 +105,8 @@ private fun MessageBubble(message: Message, mine: Boolean) {
             shape = RoundedCornerShape(12.dp),
             // O cartão já é surfaceVariant: as do outro ficam em surface para se distinguirem
             color = if (mine) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-            modifier = Modifier.widthIn(max = 280.dp)
+            // Acessibilidade: perfil, hora e texto lidos de uma só vez
+            modifier = Modifier.widthIn(max = 280.dp).semantics(mergeDescendants = true) {}
         ) {
             Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
                 Text(
