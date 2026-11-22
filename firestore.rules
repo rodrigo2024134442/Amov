@@ -1,0 +1,89 @@
+rules_version = '2';
+
+// Regras do Cloud Firestore do CityFix (projeto cityfix-ad269).
+// Publicar: consola Firebase > Firestore Database > Regras (copiar e colar este ficheiro)
+// ou, com a Firebase CLI, `firebase deploy --only firestore:rules`.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isOperator() { return signedIn() && profile().role == 'OPERATOR'; }
+    function isActiveCitizen() {
+      return signedIn() && profile().role == 'CITIZEN' && profile().status == 'ACTIVE';
+    }
+    // Domínio da autarquia (tem de ser igual a AppConfig.OPERATOR_EMAIL_DOMAIN)
+    function hasOperatorEmail() { return request.auth.token.email.matches('.*@isec[.]pt$'); }
+    function changedKeys() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    // Perfis: cada um lê o seu; o operador lê todos
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isOperator());
+      // Registo: munícipe fica PENDING; operador só com e-mail da autarquia
+      allow create: if signedIn() && request.auth.uid == uid && (
+        (request.resource.data.role == 'CITIZEN' && request.resource.data.status == 'PENDING') ||
+        (request.resource.data.role == 'OPERATOR' && request.resource.data.status == 'ACTIVE' && hasOperatorEmail()));
+      // O próprio só muda o telefone, a deteção de impactos, a fotografia e o token das notificações push
+      // (nome, NIF e localização não mudam); o operador só muda o estado (validação)
+      allow update: if signedIn() && (
+        (request.auth.uid == uid
+          && changedKeys().hasOnly(['phone', 'impactDetection', 'photoUrl', 'fcmToken'])) ||
+        (isOperator() && changedKeys().hasOnly(['status'])));
+    }
+
+    // E-mails do 2.º fator (extensão Trigger Email): cada um só pede e-mails para o seu endereço
+    match /mail/{id} {
+      allow create: if signedIn() && request.resource.data.to == request.auth.token.email;
+    }
+
+    // NIF único por perfil (o ID do documento é PERFIL_NIF)
+    match /nifs/{key} {
+      allow get: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+    }
+
+    // Categorias: todos leem; só o operador escreve
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if isOperator();
+    }
+
+    // Indicadores do dashboard: todos leem (anónimo incluído); quem tem sessão atualiza os contadores
+    match /stats/{doc} {
+      allow read: if true;
+      allow write: if signedIn();
+    }
+
+    // Ocorrências: públicas para todos; privadas só para o autor, os seguidores (grupo) e o operador
+    match /incidents/{id} {
+      function isAuthor() { return signedIn() && resource.data.userId == request.auth.uid; }
+      function isFollower() { return signedIn() && request.auth.uid in resource.data.get('followers', []); }
+
+      allow read: if resource.data.scope == 'PUBLIC' || isAuthor() || isFollower() || isOperator();
+      allow create: if isActiveCitizen() && request.resource.data.userId == request.auth.uid;
+      // Encerrada = arquivada e bloqueada (enunciado II.5)
+      allow update: if signedIn() && resource.data.status != 'CLOSED' && (
+        isAuthor() || isOperator() ||
+        // Ocorrência de grupo: outro munícipe ativo junta-se a uma pública (só acrescenta o próprio uid)
+        (isActiveCitizen() && resource.data.scope == 'PUBLIC' && changedKeys().hasOnly(['followers'])
+          && request.resource.data.followers.toSet() ==
+             resource.data.get('followers', []).toSet().union([request.auth.uid].toSet())) ||
+        // Um seguidor que escreve uma mensagem marca a última mensagem
+        (isFollower() && changedKeys().hasOnly(['lastMessageAt', 'lastMessageBy'])
+          && request.resource.data.lastMessageBy == request.auth.uid));
+      allow delete: if isAuthor();
+
+      // Mensagens com a câmara: autor, seguidores e operadores; nunca numa ocorrência encerrada
+      match /messages/{messageId} {
+        function incident() { return get(/databases/$(database)/documents/incidents/$(id)).data; }
+        function canTalk() {
+          return signedIn() && (incident().userId == request.auth.uid
+            || request.auth.uid in incident().get('followers', []) || isOperator());
+        }
+        allow read: if canTalk();
+        allow create: if canTalk() && incident().status != 'CLOSED'
+          && request.resource.data.senderUid == request.auth.uid;
+      }
+    }
+  }
+}

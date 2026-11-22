@@ -155,14 +155,18 @@ fun ProofBanner(proof: String, modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        AsyncImage(
-            model = proof,
-            contentDescription = stringResource(R.string.proof_photo),
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(10.dp))
-        )
+        if (pt.isec.amov.cityfix.utils.FileUtils.isVideo(proof)) {
+            VideoTile(proof, Modifier.size(56.dp))
+        } else {
+            AsyncImage(
+                model = proof,
+                contentDescription = stringResource(R.string.proof_photo),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(10.dp))
+            )
+        }
         Icon(Icons.Default.Verified, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
         Text(
             stringResource(R.string.proof_title),

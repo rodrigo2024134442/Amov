@@ -67,6 +67,15 @@ fun ProfileScreen(
         Text(stringResource(if (user.role == UserRole.CITIZEN) R.string.role_citizen else R.string.role_operator))
         Text(stringResource(R.string.label_email, user.email))
         Text(stringResource(R.string.label_nif, user.nif))
+        // Georreferenciação do munícipe: só de leitura (enunciado I.2.C)
+        if (user.role == UserRole.CITIZEN) {
+            Text(
+                user.address ?: if (user.latitude != null && user.longitude != null)
+                    stringResource(R.string.label_lat_lng, user.latitude, user.longitude)
+                else stringResource(R.string.no_coordinates),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
         OutlinedTextField(
             value = phone,
             onValueChange = { phone = it },

@@ -17,6 +17,8 @@ import pt.isec.amov.cityfix.model.Incident
 import pt.isec.amov.cityfix.model.IncidentLifecycle
 import pt.isec.amov.cityfix.model.IncidentStatus
 import pt.isec.amov.cityfix.model.Message
+import pt.isec.amov.cityfix.model.Session
+import pt.isec.amov.cityfix.model.UserRole
 
 /**
  * ViewModel da Parte B para UMA ocorrência (ecrã de detalhe), associado à rota do detalhe,
@@ -31,7 +33,7 @@ class MessagesViewModel(
     incidentId: String,
     private val messagesRepository: MessagesRepository,
     private val incidentsRepository: IncidentsRepository,
-    authRepository: AuthRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     /**
@@ -51,20 +53,56 @@ class MessagesViewModel(
     val reopenReason: StateFlow<String> = savedState.getStateFlow(KEY_REOPEN_REASON, "")
     val reopenError: StateFlow<Int?> = savedState.getStateFlow(KEY_REOPEN_ERROR, null)
 
+    // Diálogo "Pedir esclarecimento" do munícipe (enunciado II.2) e o texto da pergunta
+    val clarifyDialogOpen: StateFlow<Boolean> = savedState.getStateFlow(KEY_CLARIFY_OPEN, false)
+    val clarifyText: StateFlow<String> = savedState.getStateFlow(KEY_CLARIFY_TEXT, "")
+
+    fun openClarifyDialog() {
+        savedState[KEY_CLARIFY_OPEN] = true
+    }
+
+    fun onClarifyTextChange(text: String) {
+        savedState[KEY_CLARIFY_TEXT] = text
+    }
+
+    fun dismissClarify() {
+        savedState[KEY_CLARIFY_OPEN] = false
+        savedState[KEY_CLARIFY_TEXT] = ""
+    }
+
+    /**
+     * O munícipe pede esclarecimentos (estimativa temporal, procedimento...): a ocorrência passa a
+     * Pedido de Informações, com a pergunta no histórico, e a pergunta segue como mensagem.
+     * A câmara é notificada (o documento muda de estado e recebe a mensagem).
+     */
+    fun requestClarification(incident: Incident) {
+        val question = clarifyText.value.trim()
+        if (question.isEmpty()) return
+        if (incidentsRepository.changeStatus(incident, IncidentStatus.INFO_REQUESTED, question)) {
+            messagesRepository.send(incident.id, question)
+        }
+        dismissClarify()
+    }
+
     fun onDraftChange(text: String) {
         savedState[KEY_DRAFT] = text
     }
 
     /**
      * Envia o texto escrito. Numa ocorrência encerrada não envia (as regras também recusam).
-     * Se o munícipe responde a um pedido de dados, a resposta é só a mensagem: o operador decide
-     * depois quando começa os trabalhos.
+     * Se a mensagem responde ao pedido de informações em curso, a ocorrência volta ao estado anterior.
      */
     fun send(incident: Incident) {
         val text = draft.value.trim()
         if (text.isEmpty() || incident.status == IncidentStatus.CLOSED) return
         messagesRepository.send(incident.id, text)
         savedState[KEY_DRAFT] = ""
+        // Resposta ao pedido de informações em curso (do operador ao autor, ou do autor ao operador):
+        // o ticket volta ao estado em que estava antes do pedido, com a resposta no histórico
+        val user = (authRepository.session.value as? Session.Active)?.user ?: return
+        if (IncidentLifecycle.isAnswerToInfoRequest(incident, user.uid, user.role == UserRole.OPERATOR)) {
+            incidentsRepository.changeStatus(incident, IncidentLifecycle.statusBeforeInfoRequest(incident), text)
+        }
     }
 
     fun openReopenDialog() {
@@ -107,6 +145,8 @@ class MessagesViewModel(
         private const val KEY_REOPEN_OPEN = "reopenOpen"
         private const val KEY_REOPEN_REASON = "reopenReason"
         private const val KEY_REOPEN_ERROR = "reopenError"
+        private const val KEY_CLARIFY_OPEN = "clarifyOpen"
+        private const val KEY_CLARIFY_TEXT = "clarifyText"
     }
 }
 

@@ -52,6 +52,7 @@ import pt.isec.amov.cityfix.model.IncidentLifecycle
 import pt.isec.amov.cityfix.model.IncidentStatus
 import pt.isec.amov.cityfix.model.Scope
 import pt.isec.amov.cityfix.viewmodel.AuthorInfo
+import pt.isec.amov.cityfix.utils.FileUtils
 import java.util.Locale
 
 // Componentes do "Painel de Gestão Operacional" (enunciado I.3.E), com o aspeto do mockup v3:
@@ -250,7 +251,7 @@ private fun RequestInfoDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit
 }
 
 /**
- * "Resolver": fotografia comprovativa obrigatória (galeria ou câmara) e nota opcional (enunciado II.4).
+ * "Resolver": fotografia ou vídeo comprovativo obrigatório (galeria, câmara ou vídeo) e nota opcional (enunciado II.4).
  * Stateless: a fotografia e a nota vêm do TicketViewModel (sobrevivem à recriação da app pela câmara).
  * [canConfirm] é false enquanto a ocorrência ainda não voltou a carregar.
  */
@@ -261,6 +262,7 @@ fun ResolveProofDialog(
     onNoteChange: (String) -> Unit,
     onPickGallery: () -> Unit,
     onTakePhoto: () -> Unit,
+    onRecordVideo: () -> Unit,
     canConfirm: Boolean,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
@@ -274,7 +276,9 @@ fun ResolveProofDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(stringResource(R.string.resolve_text))
-                if (proofPath != null) {
+                if (proofPath != null && FileUtils.isVideo(proofPath)) {
+                    VideoTile(proofPath, Modifier.height(160.dp))
+                } else if (proofPath != null) {
                     AsyncImage(
                         model = proofPath,
                         contentDescription = stringResource(R.string.proof_photo),
@@ -287,6 +291,7 @@ fun ResolveProofDialog(
                 }
                 Button(onClick = onPickGallery) { Text(stringResource(R.string.action_gallery)) }
                 OutlinedButton(onClick = onTakePhoto) { Text(stringResource(R.string.action_camera)) }
+                OutlinedButton(onClick = onRecordVideo) { Text(stringResource(R.string.action_record_video)) }
                 OutlinedTextField(
                     value = note,
                     onValueChange = onNoteChange,

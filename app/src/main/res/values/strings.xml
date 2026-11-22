@@ -55,8 +55,8 @@
     <string name="action_gallery">Gallery</string>
     <string name="action_camera">Camera</string>
     <string name="action_remove_photo">Remove photo</string>
-    <string name="label_photos">Photos (%1$d/%2$d)</string>
-    <string name="error_media_required">Attach at least one photo</string>
+    <string name="label_photos">Photos and videos (%1$d/%2$d)</string>
+    <string name="error_media_required">Attach at least one photo or video</string>
 
     <!-- Autenticação e perfis -->
     <string name="login_title">Sign in to CityFix</string>
@@ -174,4 +174,32 @@
     <string name="reopen_reason_hint">Reason (required)</string>
     <string name="reopen_reason_required">Write the reason for reopening.</string>
     <string name="reopen_expired">It can no longer be reopened (more than 5 days after being resolved).</string>
+    <string name="action_play_video">Play video</string>
+    <string name="incident_video">Incident video</string>
+    <string name="action_record_video">Video</string>
+    <string name="register_location_title">Your location</string>
+    <string name="register_location_hint">Tap the map to set your location (required). It cannot be changed later.</string>
+    <string name="action_ask_clarification">Ask for clarification</string>
+    <string name="clarify_title">Ask the municipality</string>
+    <string name="clarify_text">Ask about the time estimate or the procedure. The municipal services will be notified.</string>
+    <string name="clarify_hint">Your question</string>
+    <string name="group_joined">A similar incident already exists less than 10 m away. You are now following it (group incident).</string>
+    <string name="label_group">Group · %1$d citizens</string>
+    <string name="label_group_detail">Group incident: %1$d citizens follow this problem</string>
+    <string name="impact_prefill_hint">Suggested after a strong impact was detected. Check the details and add a photo or video.</string>
+    <string name="channel_tickets">Incident updates</string>
+    <string name="channel_proximity">Municipal team nearby</string>
+    <string name="channel_impact">Impact detection</string>
+    <string name="notif_status_text">Status changed to: %1$s</string>
+    <string name="notif_message_text">New message about this incident.</string>
+    <string name="notif_new_incident_text">New incident reported.</string>
+    <string name="notif_proximity_text">The municipal team is in the area (less than 20 m). You can follow the work.</string>
+    <string name="notif_closing_text">24 hours left to reopen this incident. After that it will be closed for good.</string>
+    <string name="impact_title">Strong impact detected</string>
+    <string name="impact_text">It looks like you went over a pothole or a dangerous bump. Do you want to report a road surface problem now?</string>
+    <string name="action_report_now">Report now</string>
+    <string name="action_not_now">Not now</string>
+    <string name="proximity_title">Proximity alerts</string>
+    <string name="proximity_text_foreground">Allow location so authors are told when you are less than 20 m from their incident.</string>
+    <string name="proximity_text_background">Choose \"Allow all the time\" so the alerts also work with the app closed.</string>
 </resources>

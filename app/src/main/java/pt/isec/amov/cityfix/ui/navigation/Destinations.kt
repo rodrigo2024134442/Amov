@@ -26,7 +26,11 @@ data class IncidentDetailsRoute(val incidentId: String)
  * Se incidentId for null, assume modo de criação; caso contrário, modo de edição.
  */
 @Serializable
-data class EditIncidentRoute(val incidentId: String? = null)
+data class EditIncidentRoute(
+    val incidentId: String? = null,
+    // true quando aberta a partir da sugestão da deteção de impactos (enunciado I.2.F)
+    val fromImpact: Boolean = false
+)
 
 /**
  * Rotas da autenticação e do perfil.

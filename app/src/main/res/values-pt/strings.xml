@@ -55,8 +55,8 @@
     <string name="action_gallery">Galeria</string>
     <string name="action_camera">Câmara</string>
     <string name="action_remove_photo">Retirar fotografia</string>
-    <string name="label_photos">Fotografias (%1$d/%2$d)</string>
-    <string name="error_media_required">Anexe pelo menos uma fotografia</string>
+    <string name="label_photos">Fotografias e vídeos (%1$d/%2$d)</string>
+    <string name="error_media_required">Anexe pelo menos uma fotografia ou vídeo</string>
 
     <!-- Autenticação e perfis -->
     <string name="login_title">Entrar no CityFix</string>
@@ -173,4 +173,32 @@
     <string name="reopen_reason_hint">Justificação (obrigatória)</string>
     <string name="reopen_reason_required">Escreva a justificação para reabrir.</string>
     <string name="reopen_expired">Já não pode ser reaberta (passaram mais de 5 dias desde que foi resolvida).</string>
+    <string name="action_play_video">Reproduzir vídeo</string>
+    <string name="incident_video">Vídeo da ocorrência</string>
+    <string name="action_record_video">Vídeo</string>
+    <string name="register_location_title">A sua localização</string>
+    <string name="register_location_hint">Toque no mapa para indicar a sua localização (obrigatório). Não pode ser alterada depois.</string>
+    <string name="action_ask_clarification">Pedir esclarecimento</string>
+    <string name="clarify_title">Pedir esclarecimento à câmara</string>
+    <string name="clarify_text">Pergunte pela estimativa temporal ou pelo procedimento. Os serviços camarários serão notificados.</string>
+    <string name="clarify_hint">A sua pergunta</string>
+    <string name="group_joined">Já existe uma ocorrência igual a menos de 10 m. Passou a acompanhá-la (ocorrência de grupo).</string>
+    <string name="label_group">Grupo · %1$d munícipes</string>
+    <string name="label_group_detail">Ocorrência de grupo: %1$d munícipes acompanham este problema</string>
+    <string name="impact_prefill_hint">Sugerida depois de ser detetado um impacto forte. Confirme os dados e junte uma fotografia ou vídeo.</string>
+    <string name="channel_tickets">Atualizações das ocorrências</string>
+    <string name="channel_proximity">Equipa camarária por perto</string>
+    <string name="channel_impact">Deteção de impactos</string>
+    <string name="notif_status_text">O estado mudou para: %1$s</string>
+    <string name="notif_message_text">Nova mensagem sobre esta ocorrência.</string>
+    <string name="notif_new_incident_text">Nova ocorrência registada.</string>
+    <string name="notif_proximity_text">A equipa camarária está na área (a menos de 20 m). Pode acompanhar os trabalhos.</string>
+    <string name="notif_closing_text">Faltam 24 horas para poder reabrir esta ocorrência. Depois disso fica encerrada definitivamente.</string>
+    <string name="impact_title">Impacto forte detetado</string>
+    <string name="impact_text">Parece que passou por um buraco ou um ressalto perigoso. Quer reportar já uma anomalia no pavimento?</string>
+    <string name="action_report_now">Reportar já</string>
+    <string name="action_not_now">Agora não</string>
+    <string name="proximity_title">Alertas de proximidade</string>
+    <string name="proximity_text_foreground">Permita a localização para os autores serem avisados quando estiver a menos de 20 m da ocorrência.</string>
+    <string name="proximity_text_background">Escolha \"Permitir sempre\" para os alertas funcionarem também com a app fechada.</string>
 </resources>

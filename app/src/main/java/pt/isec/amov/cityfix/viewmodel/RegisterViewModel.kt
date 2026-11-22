@@ -30,6 +30,10 @@ data class RegisterUiState(
     val nif: String = "",
     val impactDetection: Boolean = false,
     val photoPath: String? = null,
+    // Georreferenciação (obrigatória para o munícipe, enunciado I.2.A)
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val address: String = "",
     val nameError: Int? = null,
     val emailError: Int? = null,
     val passwordError: Int? = null,
@@ -40,7 +44,11 @@ data class RegisterUiState(
 ) {
     val isValid: Boolean
         get() = listOf(nameError, emailError, passwordError, phoneError, nifError).all { it == null } &&
-                listOf(name, email, password, phone, nif).all { it.isNotBlank() }
+                listOf(name, email, password, phone, nif).all { it.isNotBlank() } &&
+                (role == UserRole.OPERATOR || hasLocation)
+
+    val hasLocation: Boolean
+        get() = latitude != null && longitude != null
 
     // O perfil vem do e-mail: domínio da autarquia = operador; outro = munícipe
     val role: UserRole
@@ -75,6 +83,10 @@ class RegisterViewModel(private val authRepository: AuthRepository) : ViewModel(
 
     fun onNifChanged(nif: String) {
         _state.update { it.copy(nif = nif, nifError = if (Validators.isValidNif(nif)) null else R.string.error_nif) }
+    }
+
+    fun onLocationSelected(lat: Double, lng: Double, address: String) {
+        _state.update { it.copy(latitude = lat, longitude = lng, address = address) }
     }
 
     fun onImpactDetectionChanged(enabled: Boolean) {
@@ -114,7 +126,11 @@ class RegisterViewModel(private val authRepository: AuthRepository) : ViewModel(
                 role = s.role,
                 // Enunciado: o munícipe fica pendente; o operador fica logo ativo
                 status = if (s.role == UserRole.OPERATOR) UserStatus.ACTIVE else UserStatus.PENDING,
-                impactDetection = s.role == UserRole.CITIZEN && s.impactDetection
+                impactDetection = s.role == UserRole.CITIZEN && s.impactDetection,
+                // O operador não tem georreferenciação (enunciado I.3.A)
+                latitude = s.latitude.takeIf { s.role == UserRole.CITIZEN },
+                longitude = s.longitude.takeIf { s.role == UserRole.CITIZEN },
+                address = s.address.ifBlank { null }.takeIf { s.role == UserRole.CITIZEN }
             )
             val error = try {
                 authRepository.register(user, s.password, s.photoPath)

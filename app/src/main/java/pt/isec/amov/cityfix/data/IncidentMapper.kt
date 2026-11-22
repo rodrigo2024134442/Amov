@@ -35,7 +35,11 @@ fun Incident.toFirestoreMap(): Map<String, Any?> = mapOf(
     "history" to history.map { it.toFirestoreMap() },
     "proofPath" to proofPath,
     "proofUrl" to proofUrl,
-    "syncStatus" to syncStatus.name
+    "syncStatus" to syncStatus.name,
+    "followers" to followers,
+    "lastMessageAt" to lastMessageAt,
+    "lastMessageBy" to lastMessageBy,
+    "operatorNearbyAt" to operatorNearbyAt
 )
 
 /**
@@ -89,7 +93,11 @@ fun DocumentSnapshot.toIncident(): Incident? = try {
             ?: emptyList(),
         proofPath = getString("proofPath"),
         proofUrl = getString("proofUrl"),
-        syncStatus = SyncStatus.valueOf(getString("syncStatus") ?: SyncStatus.PENDING_SYNC.name)
+        syncStatus = SyncStatus.valueOf(getString("syncStatus") ?: SyncStatus.PENDING_SYNC.name),
+        followers = get("followers") as? List<String> ?: emptyList(),
+        lastMessageAt = getLong("lastMessageAt"),
+        lastMessageBy = getString("lastMessageBy"),
+        operatorNearbyAt = getLong("operatorNearbyAt")
     )
 } catch (_: IllegalArgumentException) {
     null

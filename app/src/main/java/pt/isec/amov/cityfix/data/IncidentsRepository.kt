@@ -21,6 +21,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import pt.isec.amov.cityfix.model.Incident
+import pt.isec.amov.cityfix.model.Situation
+import pt.isec.amov.cityfix.AppConfig
+import kotlinx.coroutines.withTimeoutOrNull
 import pt.isec.amov.cityfix.model.IncidentLifecycle
 import pt.isec.amov.cityfix.model.IncidentStatus
 import pt.isec.amov.cityfix.model.Scope
@@ -41,6 +44,9 @@ sealed interface IncidentQuery {
 
     // Todos (operador)
     data object All : IncidentQuery
+
+    // Ocorrências de grupo que o munícipe acompanha (reportou o mesmo problema)
+    data class Followed(val uid: String) : IncidentQuery
 }
 
 /**
@@ -78,13 +84,19 @@ class IncidentsRepository(
                 .whereIn("status", IncidentStatus.entries.filter { it.isActive }.map { it.name })
             is IncidentQuery.ByUser -> incidentsCollection.whereEqualTo("userId", query.uid)
             IncidentQuery.All -> incidentsCollection
+            is IncidentQuery.Followed -> incidentsCollection.whereArrayContains("followers", query.uid)
         }
+        var received = false
         val registration = firestoreQuery.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                // Ex: regras do Firestore a recusar a leitura. Mantém-se a última lista.
+                // Ex: regras do Firestore a recusar a leitura. Mantém-se a última lista
+                // (ou uma lista vazia, se ainda não tinha chegado nenhuma: quem junta várias
+                // consultas com combine não pode ficar à espera desta para sempre).
                 Log.w(TAG, "Erro a ler os incidentes", error)
+                if (!received) trySend(emptyList())
                 return@addSnapshotListener
             }
+            received = true
             val list = snapshot?.documents?.mapNotNull { it.toIncident() } ?: emptyList()
             list.forEach { cachedIncidents[it.id] = it }
             trySend(list)
@@ -140,6 +152,62 @@ class IncidentsRepository(
         WorkManager.getInstance(context)
             .enqueueUniqueWork("upload_$incidentId", ExistingWorkPolicy.REPLACE, request)
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // Ocorrências de grupo (enunciado I.2, Obs.)
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * Procura uma ocorrência ativa e pública com a mesma categoria e situação a menos de 10 m,
+     * de outro munícipe e que este ainda não acompanhe. As privadas de outros não se podem ler
+     * (regras), por isso só as públicas contam. Sem resposta em 5 s (ex.: sem rede e sem cache),
+     * devolve null e a ocorrência é criada normalmente.
+     */
+    suspend fun findGroupMatch(
+        category: String,
+        situation: Situation,
+        latitude: Double,
+        longitude: Double,
+        uid: String
+    ): Incident? = try {
+        withTimeoutOrNull(5_000) {
+            incidentsCollection
+                .whereEqualTo("scope", Scope.PUBLIC.name)
+                .whereEqualTo("category", category)
+                .whereEqualTo("situation", situation.name)
+                .whereIn("status", IncidentStatus.entries.filter { it.isActive }.map { it.name })
+                .get().await()
+                .documents.mapNotNull { it.toIncident() }
+                .filter { it.userId != uid && uid !in it.followers && it.latitude != null && it.longitude != null }
+                .map { it to distanceMeters(latitude, longitude, it.latitude!!, it.longitude!!) }
+                .filter { (_, distance) -> distance <= AppConfig.GROUP_RADIUS_METERS }
+                .minByOrNull { (_, distance) -> distance }
+                ?.first
+        }
+    } catch (e: Exception) {
+        Log.w(TAG, "Não foi possível procurar ocorrências iguais", e)
+        null
+    }
+
+    /**
+     * O munícipe passa a acompanhar a ocorrência (ocorrência de grupo): fica na lista "followers".
+     */
+    fun joinGroup(incidentId: String, uid: String) {
+        incidentsCollection.document(incidentId).update("followers", FieldValue.arrayUnion(uid))
+    }
+
+    private fun distanceMeters(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Float {
+        val result = FloatArray(1)
+        android.location.Location.distanceBetween(lat1, lng1, lat2, lng2, result)
+        return result[0]
+    }
+
+    /**
+     * Um operador entrou na geofence de 20 m da ocorrência (enunciado I.3, Obs.): fica registado
+     * no documento, e os autores são notificados (NotificationsWatcher e Cloud Functions).
+     */
+    fun markOperatorNearby(incidentId: String): com.google.android.gms.tasks.Task<Void> =
+        incidentsCollection.document(incidentId).update("operatorNearbyAt", System.currentTimeMillis())
 
     // ---------------------------------------------------------------------------------------------
     // Ciclo de vida do ticket (enunciado I.3.E e II)

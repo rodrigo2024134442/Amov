@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material3.AlertDialog
@@ -153,6 +154,50 @@ fun ReopenDialog(
             }
         },
         confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.action_reopen)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
+    )
+}
+
+/**
+ * Botão "Pedir esclarecimento" do autor (enunciado II.2: o munícipe pode pedir esclarecimentos
+ * sobre a estimativa temporal ou o procedimento).
+ */
+@Composable
+fun ClarifyButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    OutlinedButton(onClick = onClick, modifier = modifier.fillMaxWidth()) {
+        Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null)
+        Text(stringResource(R.string.action_ask_clarification), modifier = Modifier.padding(start = 8.dp))
+    }
+}
+
+/**
+ * Diálogo do pedido de esclarecimento: a pergunta é obrigatória. Stateless.
+ */
+@Composable
+fun ClarifyDialog(
+    text: String,
+    onTextChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.clarify_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.clarify_text))
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = onTextChange,
+                    label = { Text(stringResource(R.string.clarify_hint)) },
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm, enabled = text.isNotBlank()) { Text(stringResource(R.string.action_send)) }
+        },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }

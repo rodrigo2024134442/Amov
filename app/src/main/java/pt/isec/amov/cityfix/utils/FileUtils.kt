@@ -23,7 +23,10 @@ object FileUtils {
      */
     fun copyUriToInternalStorage(context: Context, sourceUri: Uri): String? {
         return try {
-            val destinationFile = File(imagesDir(context), "IMG_${UUID.randomUUID()}.jpg")
+            // Vídeo ou imagem, conforme o tipo indicado pela galeria (vídeos ficam em .mp4)
+            val isVideoUri = context.contentResolver.getType(sourceUri)?.startsWith("video/") == true
+            val name = if (isVideoUri) "VID_${UUID.randomUUID()}.mp4" else "IMG_${UUID.randomUUID()}.jpg"
+            val destinationFile = File(imagesDir(context), name)
             context.contentResolver.openInputStream(sourceUri)?.use { inputStream ->
                 FileOutputStream(destinationFile).use { outputStream ->
                     inputStream.copyTo(outputStream)
@@ -47,6 +50,38 @@ object FileUtils {
             tempFile
         )
         return Pair(tempFile, uri)
+    }
+
+    /**
+     * Como createTempImageFile, mas para a câmara gravar um vídeo (enunciado I.2.E: imagens e/ou vídeos).
+     */
+    fun createTempVideoFile(context: Context): Pair<File, Uri> {
+        val tempFile = File(imagesDir(context), "CAPTURE_${System.currentTimeMillis()}.mp4")
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", tempFile)
+        return Pair(tempFile, uri)
+    }
+
+    /**
+     * true se o caminho local ou o endereço do Storage é de um vídeo (.mp4).
+     * Nos endereços do Storage o nome vem antes do "?" (ex.: .../video_0.mp4?alt=media&token=...).
+     */
+    fun isVideo(path: String?): Boolean =
+        path?.substringBefore('?')?.lowercase()?.endsWith(".mp4") == true
+
+    /**
+     * Abre um vídeo (ficheiro local ou endereço do Storage) no leitor de vídeo do sistema.
+     */
+    fun openVideo(context: Context, path: String) {
+        val uri = if (path.startsWith("http")) Uri.parse(path)
+        else FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", File(path))
+        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+            .setDataAndType(uri, "video/*")
+            .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     /**

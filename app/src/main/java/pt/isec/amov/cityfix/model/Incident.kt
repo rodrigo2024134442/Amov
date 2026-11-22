@@ -65,8 +65,30 @@ data class Incident(
     val proofUrl: String? = null,
 
     // Estado de sincronização com a nuvem (PENDING_SYNC enquanto só existe no dispositivo)
-    val syncStatus: SyncStatus = SyncStatus.PENDING_SYNC
+    val syncStatus: SyncStatus = SyncStatus.PENDING_SYNC,
+
+    // Ocorrência de grupo (enunciado I.2, Obs.): outros munícipes que reportaram o mesmo problema
+    // (mesma categoria e situação, a menos de 10 m) e passaram a acompanhar esta ocorrência
+    val followers: List<String> = emptyList(),
+
+    // Última mensagem trocada (quando e quem): serve para notificar a outra parte (enunciado III)
+    val lastMessageAt: Long? = null,
+    val lastMessageBy: String? = null,
+
+    // Última vez que um operador entrou na geofence de 20 m desta ocorrência (enunciado I.3, Obs.)
+    val operatorNearbyAt: Long? = null
 ) {
+    // Número de munícipes que acompanham o problema (o autor mais os seguidores)
+    val groupSize: Int
+        get() = 1 + followers.size
+
+    // true se a ocorrência agrega vários munícipes
+    val isGroup: Boolean
+        get() = followers.isNotEmpty()
+
+    // Autor ou seguidor: quem deve ser notificado das mudanças desta ocorrência
+    fun isFollowedBy(uid: String): Boolean = uid == userId || uid in followers
+
     // Imagens a mostrar: as da nuvem (visíveis em qualquer dispositivo) ou, antes do envio, as locais
     val displayMedia: List<String>
         get() = mediaUrls.ifEmpty { mediaPaths }

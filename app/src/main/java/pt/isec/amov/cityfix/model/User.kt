@@ -43,9 +43,10 @@ data class User(
     // Endereço da fotografia de perfil no Storage (opcional)
     val photoUrl: String? = null,
 
-    // Georreferenciação do munícipe (preenchida na aula de GPS)
+    // Georreferenciação do munícipe, escolhida no mapa no registo (não pode ser alterada)
     val latitude: Double? = null,
     val longitude: Double? = null,
+    val address: String? = null,
 
     // Data do registo (Unix Epoch em milissegundos)
     val createdAt: Long = System.currentTimeMillis()

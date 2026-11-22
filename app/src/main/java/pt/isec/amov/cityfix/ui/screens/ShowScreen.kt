@@ -157,6 +157,13 @@ fun ShowScreen(
                 text = stringResource(R.string.label_scope, incident.scope.label()),
                 style = MaterialTheme.typography.bodyMedium
             )
+            if (incident.isGroup) {
+                Text(
+                    text = stringResource(R.string.label_group_detail, incident.groupSize),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
             if (showLocation) {
                 incident.address?.let { addr ->
                     Text(

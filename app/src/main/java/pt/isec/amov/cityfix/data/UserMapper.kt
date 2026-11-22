@@ -19,6 +19,7 @@ fun User.toFirestoreMap(): Map<String, Any?> = mapOf(
     "photoUrl" to photoUrl,
     "latitude" to latitude,
     "longitude" to longitude,
+    "address" to address,
     "createdAt" to createdAt
 )
 
@@ -35,6 +36,7 @@ fun DocumentSnapshot.toUser(): User? = try {
         photoUrl = getString("photoUrl"),
         latitude = getDouble("latitude"),
         longitude = getDouble("longitude"),
+        address = getString("address"),
         createdAt = getLong("createdAt") ?: 0L
     )
 } catch (_: IllegalArgumentException) {

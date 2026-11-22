@@ -12,6 +12,10 @@ import pt.isec.amov.cityfix.R
 import pt.isec.amov.cityfix.data.AuthRepository
 import pt.isec.amov.cityfix.data.CategoriesRepository
 import pt.isec.amov.cityfix.data.IncidentsRepository
+import pt.isec.amov.cityfix.data.LocationRepository
+import pt.isec.amov.cityfix.data.MessagesRepository
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import pt.isec.amov.cityfix.model.Category
 import pt.isec.amov.cityfix.model.Incident
 import pt.isec.amov.cityfix.model.IncidentStatus
@@ -29,7 +33,10 @@ class EditIncidentViewModel(
     private val repository: IncidentsRepository,
     categoriesRepository: CategoriesRepository,
     private val authRepository: AuthRepository,
-    private val incidentId: String?
+    private val messagesRepository: MessagesRepository,
+    private val locationRepository: LocationRepository,
+    private val incidentId: String?,
+    fromImpact: Boolean = false
 ) : ViewModel() {
 
     private val _editState = MutableStateFlow(EditIncidentUiState())
@@ -62,6 +69,31 @@ class EditIncidentViewModel(
                     longitude = i.longitude,
                     address = i.address ?: ""
                 )
+            }
+        } else if (fromImpact) {
+            prefillFromImpact()
+        }
+    }
+
+    /**
+     * Ocorrência sugerida pela deteção de impactos (enunciado I.2.F): anomalia no pavimento.
+     * Situação "Dano", a categoria das vias (se existir e estiver ativa) e a posição atual.
+     */
+    private fun prefillFromImpact() {
+        _editState.update { it.copy(situation = Situation.DAMAGE, fromImpact = true) }
+        viewModelScope.launch {
+            val roads = categories.first { it.isNotEmpty() }.firstOrNull { category ->
+                ROAD_KEYWORDS.any { category.name.contains(it, ignoreCase = true) }
+            }
+            if (roads != null && _editState.value.category.isBlank()) {
+                _editState.update { it.copy(category = roads.name) }
+            }
+        }
+        viewModelScope.launch {
+            locationRepository.getCurrentLocation()?.let { location ->
+                if (_editState.value.latitude == null) {
+                    _editState.update { it.copy(latitude = location.latitude, longitude = location.longitude) }
+                }
             }
         }
     }
@@ -127,11 +159,40 @@ class EditIncidentViewModel(
     /**
      * Valida, cria o Incident, grava-o no Firestore, agenda o envio das imagens e chama onSuccess.
      */
-    fun saveIncident(onSuccess: () -> Unit) {
+    fun saveIncident(onSuccess: (joinedGroupId: String?) -> Unit) {
         val current = _editState.value
-        if (!current.isValid) return
+        if (!current.isValid || current.isSaving) return
         _editState.update { it.copy(isSaving = true) }
         val base = original
+        val uid = authRepository.currentUid.orEmpty()
+
+        // Ocorrência nova com localização: se já houver uma igual a menos de 10 m (mesma categoria e
+        // situação), o munícipe passa a acompanhá-la em vez de criar outra (ocorrência de grupo).
+        if (base == null && current.latitude != null && current.longitude != null) {
+            viewModelScope.launch {
+                val match = repository.findGroupMatch(
+                    current.category, current.situation!!, current.latitude, current.longitude, uid
+                )
+                if (match != null) {
+                    repository.joinGroup(match.id, uid)
+                    // A descrição segue como mensagem, para a câmara ter a informação deste munícipe
+                    messagesRepository.send(match.id, current.description.trim())
+                    current.mediaPaths.forEach { FileUtils.deleteFileFromPath(it) }
+                    saved = true
+                    _editState.update { it.copy(isSaving = false) }
+                    onSuccess(match.id)
+                } else {
+                    createOrUpdate(current, null)
+                    onSuccess(null)
+                }
+            }
+            return
+        }
+        createOrUpdate(current, base)
+        onSuccess(null)
+    }
+
+    private fun createOrUpdate(current: EditIncidentUiState, base: Incident?) {
         // Apaga do disco as fotografias que o utilizador retirou (evita ficheiros órfãos, desafio da aula P09)
         base?.mediaPaths
             ?.filter { it !in current.mediaPaths }
@@ -166,13 +227,17 @@ class EditIncidentViewModel(
             history = base?.history ?: emptyList(),
             proofPath = base?.proofPath,
             proofUrl = base?.proofUrl,
-            syncStatus = kept?.syncStatus ?: SyncStatus.PENDING_SYNC
+            syncStatus = kept?.syncStatus ?: SyncStatus.PENDING_SYNC,
+            // Campos que o formulário não mostra: mantêm-se (set() substitui o documento inteiro)
+            followers = base?.followers ?: emptyList(),
+            lastMessageAt = base?.lastMessageAt,
+            lastMessageBy = base?.lastMessageBy,
+            operatorNearbyAt = base?.operatorNearbyAt
         )
         repository.saveIncident(incident, isNew = base == null)
         saved = true
         if (mediaChanged) repository.scheduleMediaUpload(incident.id)
         _editState.update { it.copy(isSaving = false) }
-        onSuccess()
     }
 
     /**
@@ -188,5 +253,10 @@ class EditIncidentViewModel(
                 .filter { it !in originalPaths }
                 .forEach { FileUtils.deleteFileFromPath(it) }
         }
+    }
+
+    companion object {
+        // Nomes de categoria que correspondem ao pavimento (PT e EN), para a sugestão de impacto
+        private val ROAD_KEYWORDS = listOf("via", "pavimento", "estrada", "road", "street", "pavement")
     }
 }

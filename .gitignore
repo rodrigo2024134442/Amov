@@ -19,3 +19,7 @@ docs/CONTAS_DE_TESTE.md
 
 # Chave do Google Maps (vai no ZIP de entrega, não no Git)
 secrets.properties
+
+# Cloud Functions
+functions/node_modules/
+firebase-debug.log

@@ -1,6 +1,19 @@
 package pt.isec.amov.cityfix
 
+import android.Manifest
 import android.content.Intent
+import android.os.Build
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.flow.MutableStateFlow
+import pt.isec.amov.cityfix.notifications.NotificationHelper
+import pt.isec.amov.cityfix.sensors.ImpactDetector
+import pt.isec.amov.cityfix.ui.components.ImpactDialog
+import pt.isec.amov.cityfix.ui.components.ProximityBanner
+import android.widget.Toast
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
@@ -13,6 +26,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -37,6 +51,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import pt.isec.amov.cityfix.data.LocationRepository
+import pt.isec.amov.cityfix.R
 import pt.isec.amov.cityfix.model.IncidentLifecycle
 import pt.isec.amov.cityfix.model.IncidentStatus
 import pt.isec.amov.cityfix.model.Session
@@ -46,6 +61,8 @@ import pt.isec.amov.cityfix.ui.components.AppNavigationRail
 import pt.isec.amov.cityfix.ui.components.MainTopAppBar
 import pt.isec.amov.cityfix.ui.components.ResolveProofDialog
 import pt.isec.amov.cityfix.ui.components.MessagesSection
+import pt.isec.amov.cityfix.ui.components.ClarifyButton
+import pt.isec.amov.cityfix.ui.components.ClarifyDialog
 import pt.isec.amov.cityfix.ui.components.ReopenButton
 import pt.isec.amov.cityfix.ui.components.ReopenDialog
 import pt.isec.amov.cityfix.ui.components.TicketSection
@@ -112,8 +129,26 @@ class MainActivity : ComponentActivity() {
         GuestAreaViewModelFactory(app.locationRepository)
     }
 
+    // Ocorrência a abrir (vinda de uma notificação) e pedido para abrir a sugestão de impacto
+    private val pendingIncidentId = MutableStateFlow<String?>(null)
+    private val pendingImpact = MutableStateFlow(false)
+
+    private fun handleIntent(intent: Intent?) {
+        intent?.getStringExtra(NotificationHelper.EXTRA_INCIDENT_ID)?.let { pendingIncidentId.value = it }
+        if (intent?.getBooleanExtra(NotificationHelper.EXTRA_OPEN_IMPACT, false) == true) pendingImpact.value = true
+        // Já tratada: não voltar a abrir ao rodar o ecrã
+        intent?.removeExtra(NotificationHelper.EXTRA_INCIDENT_ID)
+        intent?.removeExtra(NotificationHelper.EXTRA_OPEN_IMPACT)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) handleIntent(intent)
         enableEdgeToEdge()
         setContent {
             CityFixTheme {
@@ -172,6 +207,68 @@ class MainActivity : ComponentActivity() {
         var isExpanded by rememberSaveable { mutableStateOf(false) }
         val user = (session as? Session.Active)?.user
         val isGuest = session is Session.Guest
+        val lifecycleOwner = LocalLifecycleOwner.current
+
+        // --- Notificações (enunciado III): permissão no Android 13+, pedida uma vez com sessão ativa ---
+        val notificationPermission = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { }
+        var askedNotifications by rememberSaveable { mutableStateOf(false) }
+        LaunchedEffect(user?.uid) {
+            if (user != null && !askedNotifications && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                !NotificationHelper.canNotify(this@MainActivity)
+            ) {
+                askedNotifications = true
+                notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
+        // --- Deteção de impactos (enunciado I.2.F): munícipe com a opção ativa, enquanto a app está aberta ---
+        var showImpactDialog by rememberSaveable { mutableStateOf(false) }
+        val impactEnabled = user?.role == UserRole.CITIZEN && user.impactDetection
+        DisposableEffect(lifecycleOwner, impactEnabled) {
+            val detector = ImpactDetector(this@MainActivity) { showImpactDialog = true }
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_RESUME -> if (impactEnabled) detector.start()
+                    Lifecycle.Event.ON_PAUSE -> detector.stop()
+                    else -> Unit
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            if (impactEnabled && lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) detector.start()
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+                detector.stop()
+            }
+        }
+
+        // --- Geofence do operador: permissões de localização (primeiro e segundo plano) ---
+        val geofenceManager = app.geofenceManager
+        var hasFine by remember { mutableStateOf(geofenceManager.hasFineLocation()) }
+        var hasBackground by remember { mutableStateOf(geofenceManager.hasBackgroundLocation()) }
+        val refreshLocationPermissions = {
+            hasFine = geofenceManager.hasFineLocation()
+            hasBackground = geofenceManager.hasBackgroundLocation()
+            if (hasFine) geofenceManager.refresh()
+        }
+        val foregroundLocationLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { refreshLocationPermissions() }
+        val backgroundLocationLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { refreshLocationPermissions() }
+        // Ao voltar das definições do Android, a permissão pode ter mudado
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    hasFine = geofenceManager.hasFineLocation()
+                    hasBackground = geofenceManager.hasBackgroundLocation()
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        }
 
         // --- Área de 10 km do munícipe anónimo (enunciado I.1) ---
         val areaState by guestAreaViewModel.state.collectAsStateWithLifecycle()
@@ -222,6 +319,32 @@ class MainActivity : ComponentActivity() {
                 launchSingleTop = true
                 restoreState = true
             }
+        }
+
+        // Notificação tocada: abre o detalhe da ocorrência (com sessão ativa)
+        val openIncident by pendingIncidentId.collectAsStateWithLifecycle()
+        LaunchedEffect(openIncident, user?.uid) {
+            val id = openIncident
+            if (id != null && user != null) {
+                navController.navigate(IncidentDetailsRoute(id))
+                pendingIncidentId.value = null
+            }
+        }
+        val openImpact by pendingImpact.collectAsStateWithLifecycle()
+        LaunchedEffect(openImpact) {
+            if (openImpact) {
+                showImpactDialog = true
+                pendingImpact.value = false
+            }
+        }
+        if (showImpactDialog && impactEnabled) {
+            ImpactDialog(
+                onReport = {
+                    showImpactDialog = false
+                    navController.navigate(EditIncidentRoute(fromImpact = true))
+                },
+                onDismiss = { showImpactDialog = false }
+            )
         }
 
         Scaffold(
@@ -276,14 +399,28 @@ class MainActivity : ComponentActivity() {
                         }
                         val incidents by viewModel.incidentsList.collectAsStateWithLifecycle()
                         val filter by viewModel.filter.collectAsStateWithLifecycle()
-                        ListScreen(
-                            incidents = incidents,
-                            isExpanded = isExpanded,
-                            onIncidentClick = { id -> navController.navigate(IncidentDetailsRoute(id)) },
-                            // Só o munícipe escolhe entre as suas e as públicas
-                            filter = if (user?.role == UserRole.CITIZEN) filter else null,
-                            onFilterChange = viewModel::onFilterChanged
-                        )
+                        Column(Modifier.fillMaxSize()) {
+                            // Operador sem localização "sempre": os alertas de proximidade não funcionam
+                            if (user?.role == UserRole.OPERATOR && (!hasFine || !hasBackground)) {
+                                ProximityBanner(
+                                    needsForeground = !hasFine,
+                                    onAllow = {
+                                        if (!hasFine) foregroundLocationLauncher.launch(LocationRepository.LOCATION_PERMISSIONS)
+                                        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                            backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                                        }
+                                    }
+                                )
+                            }
+                            ListScreen(
+                                incidents = incidents,
+                                isExpanded = isExpanded,
+                                onIncidentClick = { id -> navController.navigate(IncidentDetailsRoute(id)) },
+                                // Só o munícipe escolhe entre as suas e as públicas
+                                filter = if (user?.role == UserRole.CITIZEN) filter else null,
+                                onFilterChange = viewModel::onFilterChanged
+                            )
+                        }
                     }
                     composable<IncidentDetailsRoute> { backStack ->
                         if (blocked) {
@@ -299,6 +436,8 @@ class MainActivity : ComponentActivity() {
                             ?: recentPublic.find { it.id == route.incidentId }
                         val isOwner = user != null && incident?.userId == user.uid
                         val isOperator = user?.role == UserRole.OPERATOR
+                        // Ocorrência de grupo: quem reportou o mesmo problema acompanha esta ocorrência
+                        val isFollower = user != null && incident != null && user.uid in incident.followers
                         val showLocation = isOwner || isOperator
                         // Ciclo de vida desta ocorrência (associado a esta rota: sai do detalhe, é destruído)
                         val ticketViewModel: TicketViewModel = viewModel(
@@ -323,6 +462,9 @@ class MainActivity : ComponentActivity() {
                         val proofCamera = rememberLauncherForActivityResult(
                             ActivityResultContracts.TakePicture()
                         ) { success -> ticketViewModel.onCameraResult(success) }
+                        val proofVideo = rememberLauncherForActivityResult(
+                            ActivityResultContracts.CaptureVideo()
+                        ) { success -> ticketViewModel.onCameraResult(success) }
                         if (resolveDialogOpen && isOperator) {
                             ResolveProofDialog(
                                 proofPath = proofPath,
@@ -330,13 +472,18 @@ class MainActivity : ComponentActivity() {
                                 onNoteChange = ticketViewModel::onResolveNoteChange,
                                 onPickGallery = {
                                     proofGallery.launch(
-                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
                                     )
                                 },
                                 onTakePhoto = {
                                     val (file, uri) = FileUtils.createTempImageFile(context)
                                     ticketViewModel.onCameraLaunched(file.absolutePath)
                                     proofCamera.launch(uri)
+                                },
+                                onRecordVideo = {
+                                    val (file, uri) = FileUtils.createTempVideoFile(context)
+                                    ticketViewModel.onCameraLaunched(file.absolutePath)
+                                    proofVideo.launch(uri)
                                 },
                                 // Enquanto a ocorrência volta a carregar (depois da recriação), espera
                                 canConfirm = incident != null,
@@ -355,7 +502,7 @@ class MainActivity : ComponentActivity() {
                             onDeleteClick = { id -> viewModel.deleteIncident(id) { navController.popBackStack() } },
                             extraContent = {
                                 // Ciclo de vida: só o autor e o operador (enunciado I.2.E e I.3.E)
-                                if (incident != null && (isOwner || isOperator)) {
+                                if (incident != null && (isOwner || isOperator || isFollower)) {
                                     TicketSection(
                                         incident = incident,
                                         isOperator = isOperator,
@@ -378,6 +525,20 @@ class MainActivity : ComponentActivity() {
                                             val reopenOpen by messagesViewModel.reopenDialogOpen.collectAsStateWithLifecycle()
                                             val reopenReason by messagesViewModel.reopenReason.collectAsStateWithLifecycle()
                                             val reopenError by messagesViewModel.reopenError.collectAsStateWithLifecycle()
+                                            val clarifyOpen by messagesViewModel.clarifyDialogOpen.collectAsStateWithLifecycle()
+                                            val clarifyText by messagesViewModel.clarifyText.collectAsStateWithLifecycle()
+                                            // O autor pode pedir esclarecimentos à câmara (enunciado II.2)
+                                            if (isOwner && IncidentLifecycle.canAskClarification(incident)) {
+                                                ClarifyButton(onClick = messagesViewModel::openClarifyDialog)
+                                            }
+                                            if (clarifyOpen && isOwner) {
+                                                ClarifyDialog(
+                                                    text = clarifyText,
+                                                    onTextChange = messagesViewModel::onClarifyTextChange,
+                                                    onConfirm = { messagesViewModel.requestClarification(incident) },
+                                                    onDismiss = messagesViewModel::dismissClarify
+                                                )
+                                            }
                                             // Só o autor reabre, até 5 dias depois de resolvida
                                             if (isOwner && IncidentLifecycle.canReopen(incident)) {
                                                 ReopenButton(onClick = messagesViewModel::openReopenDialog)
@@ -411,11 +572,14 @@ class MainActivity : ComponentActivity() {
                         val editViewModel: EditIncidentViewModel = viewModel(
                             viewModelStoreOwner = backStack,
                             factory = EditIncidentViewModelFactory(
-                                app.repository, app.categoriesRepository, app.authRepository, route.incidentId
+                                app.repository, app.categoriesRepository, app.authRepository,
+                                app.messagesRepository, app.locationRepository,
+                                route.incidentId, route.fromImpact
                             )
                         )
                         val editState by editViewModel.editState.collectAsStateWithLifecycle()
                         val categories by editViewModel.categories.collectAsStateWithLifecycle()
+                        val editContext = LocalContext.current
                         EditScreen(
                             state = editState,
                             categories = categories,
@@ -430,7 +594,14 @@ class MainActivity : ComponentActivity() {
                             onLocationSelected = editViewModel::onLocationSelected,
                             onSaveClick = {
                                 // A lista atualiza-se sozinha (snapshot listener do Firestore)
-                                editViewModel.saveIncident { navController.popBackStack() }
+                                editViewModel.saveIncident { joinedGroupId ->
+                                    navController.popBackStack()
+                                    // Já havia uma igual a menos de 10 m: passou a acompanhá-la (ocorrência de grupo)
+                                    if (joinedGroupId != null) {
+                                        Toast.makeText(editContext, R.string.group_joined, Toast.LENGTH_LONG).show()
+                                        navController.navigate(IncidentDetailsRoute(joinedGroupId))
+                                    }
+                                }
                             }
                         )
                     }
@@ -463,6 +634,7 @@ class MainActivity : ComponentActivity() {
                             onPhoneChange = registerViewModel::onPhoneChanged,
                             onNifChange = registerViewModel::onNifChanged,
                             onImpactDetectionChange = registerViewModel::onImpactDetectionChanged,
+                            onLocationSelected = registerViewModel::onLocationSelected,
                             onPhotoChange = registerViewModel::onPhotoChanged,
                             onRegister = registerViewModel::register
                         )

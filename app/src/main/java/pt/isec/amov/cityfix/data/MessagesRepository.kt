@@ -37,6 +37,11 @@ class MessagesRepository(private val authRepository: AuthRepository) {
         }
         val message = Message(senderUid = user.uid, senderRole = user.role, text = trimmed)
         incidents.document(incidentId).collection(MESSAGES).add(message.toFirestoreMap())
+        // Marca no documento da ocorrência a última mensagem (quando e quem): é assim que a outra
+        // parte é notificada (enunciado II.2 e III). Escrita à parte: se falhar, a mensagem fica na mesma.
+        incidents.document(incidentId).update(
+            mapOf("lastMessageAt" to message.timestamp, "lastMessageBy" to user.uid)
+        )
     }
 
     /**

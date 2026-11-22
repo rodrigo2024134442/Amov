@@ -8,6 +8,9 @@ import pt.isec.amov.cityfix.data.IncidentsRepository
 import pt.isec.amov.cityfix.data.LocationRepository
 import pt.isec.amov.cityfix.data.MessagesRepository
 import pt.isec.amov.cityfix.data.StatsRepository
+import pt.isec.amov.cityfix.geofence.GeofenceManager
+import pt.isec.amov.cityfix.notifications.NotificationHelper
+import pt.isec.amov.cityfix.notifications.NotificationsWatcher
 
 /**
  * Classe Application: existe uma só instância enquanto o processo da app estiver vivo.
@@ -36,8 +39,18 @@ class CityFixApp : Application() {
         MessagesRepository(authRepository)
     }
 
+    // Geofences do operador e notificações locais (enunciado III)
+    val geofenceManager by lazy {
+        GeofenceManager(this)
+    }
+    val notificationsWatcher by lazy {
+        NotificationsWatcher(this, authRepository, repository, geofenceManager)
+    }
+
     override fun onCreate() {
         super.onCreate()
+        NotificationHelper.createChannels(this)
+        notificationsWatcher.start()
         // Fecho automático das ocorrências resolvidas há mais de 5 dias (enunciado II.5)
         AutoCloseWorker.schedule(this)
     }

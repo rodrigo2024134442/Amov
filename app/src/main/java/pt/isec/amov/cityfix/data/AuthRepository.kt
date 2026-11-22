@@ -245,6 +245,11 @@ class AuthRepository(context: Context) {
     }
 
     fun signOut() {
+        // Este telemóvel deixa de receber as notificações push desta conta
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().deleteToken()
+        } catch (_: Exception) {
+        }
         auth.signOut()
         prefs.edit { remove(KEY_MFA_UID) }
         clearCode()

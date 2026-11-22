@@ -21,6 +21,9 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -55,6 +58,7 @@ import pt.isec.amov.cityfix.viewmodel.EditIncidentUiState
  * Recebe o estado já pronto e devolve cada alteração ao ViewModel pelos callbacks.
  * Inclui seleção de morada e georreferenciação por mapa (Ficha 10).
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EditScreen(
     state: EditIncidentUiState,
@@ -73,6 +77,16 @@ fun EditScreen(
 ) {
     val context = LocalContext.current
     var tempCameraPath by rememberSaveable { mutableStateOf<String?>(null) }
+    var tempVideoPath by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // Gravar um vídeo com a câmara (enunciado I.2.E: imagens e/ou vídeos)
+    val videoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CaptureVideo()
+    ) { success ->
+        val path = tempVideoPath
+        if (success && path != null) onMediaAttached(listOf(path)) else FileUtils.deleteFileFromPath(path)
+        tempVideoPath = null
+    }
 
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = EditIncidentUiState.MAX_MEDIA)
@@ -111,14 +125,25 @@ fun EditScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Aberta pela deteção de impactos: explica porque já vem preenchida
+            if (state.fromImpact) {
+                Text(
+                    text = stringResource(R.string.impact_prefill_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
             Text(
                 text = stringResource(R.string.label_photos, state.mediaPaths.size, EditIncidentUiState.MAX_MEDIA),
                 style = MaterialTheme.typography.titleMedium
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Button(
                     onClick = {
-                        photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
                     },
                     enabled = state.remainingMedia > 0
                 ) {
@@ -137,6 +162,18 @@ fun EditScreen(
                     Icon(Icons.Default.PhotoCamera, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.action_camera))
+                }
+                OutlinedButton(
+                    onClick = {
+                        val (file, uri) = FileUtils.createTempVideoFile(context)
+                        tempVideoPath = file.absolutePath
+                        videoLauncher.launch(uri)
+                    },
+                    enabled = state.remainingMedia > 0
+                ) {
+                    Icon(Icons.Default.Videocam, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.action_record_video))
                 }
             }
             if (state.mediaPaths.isEmpty()) {

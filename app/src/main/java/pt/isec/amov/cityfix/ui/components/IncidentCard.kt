@@ -59,6 +59,14 @@ fun IncidentCard(
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
+                    // Ocorrência de grupo: vários munícipes acompanham o mesmo problema
+                    if (incident.isGroup) {
+                        Text(
+                            text = stringResource(R.string.label_group, incident.groupSize),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
                 }
             }
             AnimatedVisibility(visible = isExpanded) {

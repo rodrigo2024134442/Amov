@@ -53,7 +53,17 @@ class IncidentsViewModel(
     val incidentsList: StateFlow<List<Incident>> =
         combine(authRepository.session, _filter) { session, filter -> queryFor(session, filter) }
             .distinctUntilChanged()
-            .flatMapLatest { query -> if (query == null) flowOf(emptyList()) else repository.observeIncidents(query) }
+            .flatMapLatest { query ->
+                when (query) {
+                    null -> flowOf(emptyList())
+                    // "As minhas" inclui as ocorrências de grupo que o munícipe acompanha
+                    is IncidentQuery.ByUser -> combine(
+                        repository.observeIncidents(query),
+                        repository.observeIncidents(IncidentQuery.Followed(query.uid))
+                    ) { mine, followed -> (mine + followed).distinctBy { it.id } }
+                    else -> repository.observeIncidents(query)
+                }
+            }
             .map { IncidentsList(it).getAllSorted() }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

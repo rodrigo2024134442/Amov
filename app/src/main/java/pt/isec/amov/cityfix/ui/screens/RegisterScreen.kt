@@ -27,13 +27,17 @@ import pt.isec.amov.cityfix.AppConfig
 import pt.isec.amov.cityfix.R
 import pt.isec.amov.cityfix.model.UserRole
 import pt.isec.amov.cityfix.ui.components.PhotoSourceButtons
+import pt.isec.amov.cityfix.ui.components.MapLocationPicker
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import pt.isec.amov.cityfix.ui.components.UserAvatar
 import pt.isec.amov.cityfix.viewmodel.RegisterUiState
 
 /**
  * Ecrã stateless de registo de munícipe ou operador (enunciado I.2.A e I.3.A).
  * O perfil não se escolhe: é o domínio do e-mail que o define (ver AppConfig).
- * A fotografia é opcional; a georreferenciação fica para a aula de GPS.
+ * A fotografia é opcional; o munícipe escolhe a sua localização no mapa (obrigatória).
  */
 @Composable
 fun RegisterScreen(
@@ -44,6 +48,7 @@ fun RegisterScreen(
     onPhoneChange: (String) -> Unit,
     onNifChange: (String) -> Unit,
     onImpactDetectionChange: (Boolean) -> Unit,
+    onLocationSelected: (lat: Double, lng: Double, address: String) -> Unit,
     onPhotoChange: (String) -> Unit,
     onRegister: () -> Unit,
     modifier: Modifier = Modifier
@@ -75,6 +80,23 @@ fun RegisterScreen(
         RegisterField(state.nif, onNifChange, R.string.field_nif, state.nifError, KeyboardType.Number)
         // Deteção de impactos e aviso de validação: só para munícipes
         if (state.role == UserRole.CITIZEN) {
+            // Georreferenciação do munícipe (enunciado I.2.A): escolhida no mapa, não pode ser alterada depois
+            Text(stringResource(R.string.register_location_title), style = MaterialTheme.typography.titleSmall)
+            Text(
+                if (state.hasLocation) state.address.ifBlank { stringResource(R.string.label_lat_lng, state.latitude!!, state.longitude!!) }
+                else stringResource(R.string.register_location_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = if (state.hasLocation) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
+            )
+            MapLocationPicker(
+                initialLat = state.latitude,
+                initialLng = state.longitude,
+                onLocationSelected = onLocationSelected,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.field_impact_detection), modifier = Modifier.weight(1f))
                 Switch(checked = state.impactDetection, onCheckedChange = onImpactDetectionChange)

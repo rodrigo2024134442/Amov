@@ -15,6 +15,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.platform.LocalContext
+import pt.isec.amov.cityfix.utils.FileUtils
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,14 +54,18 @@ fun IncidentPhotoGallery(
     ) {
         items(photos, key = { it }) { path ->
             Box {
-                AsyncImage(
-                    model = path,
-                    contentDescription = stringResource(R.string.incident_photo),
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .aspectRatio(1f)
-                )
+                if (FileUtils.isVideo(path)) {
+                    VideoTile(path)
+                } else {
+                    AsyncImage(
+                        model = path,
+                        contentDescription = stringResource(R.string.incident_photo),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .aspectRatio(1f)
+                    )
+                }
                 if (onRemove != null) {
                     IconButton(
                         onClick = { onRemove(path) },
@@ -71,5 +80,29 @@ fun IncidentPhotoGallery(
                 }
             }
         }
+    }
+}
+
+/**
+ * Um vídeo na galeria: quadrado com o ícone de reprodução; ao tocar abre no leitor do sistema.
+ */
+@Composable
+fun VideoTile(path: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val label = stringResource(R.string.action_play_video)
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .aspectRatio(1f)
+            .background(MaterialTheme.colorScheme.inverseSurface)
+            .clickable(onClickLabel = label) { FileUtils.openVideo(context, path) },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            Icons.Default.PlayCircle,
+            contentDescription = stringResource(R.string.incident_video),
+            tint = MaterialTheme.colorScheme.inverseOnSurface,
+            modifier = Modifier.size(48.dp)
+        )
     }
 }

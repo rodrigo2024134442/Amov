@@ -21,7 +21,9 @@ data class EditIncidentUiState(
     val address: String = "",
     val titleError: Int? = null,
     val descriptionError: Int? = null,
-    val isSaving: Boolean = false
+    val isSaving: Boolean = false,
+    // Aberta a partir de um impacto detetado (enunciado I.2.F): já vem com a situação e a localização
+    val fromImpact: Boolean = false
 ) {
     // Calculado: o FAB de gravar só fica ativo quando tudo está preenchido e sem erros
     // (o enunciado obriga a pelo menos uma imagem/vídeo)
@@ -31,7 +33,7 @@ data class EditIncidentUiState(
                 category.isNotBlank() && situation != null &&
                 mediaPaths.isNotEmpty()
 
-    // Quantas fotografias ainda se podem anexar
+    // Quantas fotografias ou vídeos ainda se podem anexar
     val remainingMedia: Int
         get() = MAX_MEDIA - mediaPaths.size
 

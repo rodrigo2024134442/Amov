@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Videocam
+import pt.isec.amov.cityfix.utils.FileUtils
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -30,7 +32,9 @@ fun IncidentThumbnail(
     size: Dp = 64.dp
 ) {
     val shape = RoundedCornerShape(8.dp)
-    if (!picturePath.isNullOrBlank()) {
+    // Antes do envio, a miniatura é o primeiro ficheiro local, que pode ser um vídeo (o Coil não o lê)
+    val isVideo = FileUtils.isVideo(picturePath)
+    if (!picturePath.isNullOrBlank() && !isVideo) {
         AsyncImage(
             model = picturePath,
             contentDescription = stringResource(R.string.incident_photo),
@@ -48,8 +52,8 @@ fun IncidentThumbnail(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Image,
-                contentDescription = stringResource(R.string.no_media),
+                imageVector = if (isVideo) Icons.Default.Videocam else Icons.Default.Image,
+                contentDescription = stringResource(if (isVideo) R.string.incident_video else R.string.no_media),
                 tint = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }

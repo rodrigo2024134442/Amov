@@ -61,6 +61,7 @@ fun ValidateUsersScreen(
                             else stringResource(R.string.no_coordinates),
                             style = MaterialTheme.typography.bodySmall
                         )
+                        user.address?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                     }
                     Button(onClick = { onActivate(user.uid) }) { Text(stringResource(R.string.action_activate)) }
                 }

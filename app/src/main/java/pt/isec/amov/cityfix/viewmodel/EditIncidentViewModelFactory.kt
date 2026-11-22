@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import pt.isec.amov.cityfix.data.AuthRepository
 import pt.isec.amov.cityfix.data.CategoriesRepository
 import pt.isec.amov.cityfix.data.IncidentsRepository
+import pt.isec.amov.cityfix.data.LocationRepository
+import pt.isec.amov.cityfix.data.MessagesRepository
 
 /**
  * Fábrica do EditIncidentViewModel: passa-lhe os repositórios e o ID do incidente
@@ -14,9 +16,15 @@ class EditIncidentViewModelFactory(
     private val repository: IncidentsRepository,
     private val categoriesRepository: CategoriesRepository,
     private val authRepository: AuthRepository,
-    private val incidentId: String?
+    private val messagesRepository: MessagesRepository,
+    private val locationRepository: LocationRepository,
+    private val incidentId: String?,
+    private val fromImpact: Boolean = false
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        EditIncidentViewModel(repository, categoriesRepository, authRepository, incidentId) as T
+        EditIncidentViewModel(
+            repository, categoriesRepository, authRepository, messagesRepository, locationRepository,
+            incidentId, fromImpact
+        ) as T
 }

@@ -64,4 +64,30 @@ object ImageUtils {
         val matrix = Matrix().apply { postRotate(degrees) }
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
+
+    /**
+     * Miniatura de um vídeo: um frame do início, reduzido a [maxSide] píxeis e comprimido em JPEG.
+     * Usado quando a ocorrência só tem vídeos (a lista precisa sempre de uma miniatura).
+     */
+    fun videoThumbnail(path: String, maxSide: Int, quality: Int): ByteArray? = try {
+        val retriever = android.media.MediaMetadataRetriever()
+        val frame = try {
+            retriever.setDataSource(path)
+            retriever.getFrameAtTime(0)
+        } finally {
+            retriever.release()
+        }
+        frame?.let {
+            val scale = maxSide.toFloat() / max(it.width, it.height)
+            val scaled = if (scale < 1f) Bitmap.createScaledBitmap(
+                it, (it.width * scale).roundToInt(), (it.height * scale).roundToInt(), true
+            ) else it
+            ByteArrayOutputStream().use { out ->
+                scaled.compress(Bitmap.CompressFormat.JPEG, quality, out)
+                out.toByteArray()
+            }
+        }
+    } catch (e: Exception) {
+        null
+    }
 }

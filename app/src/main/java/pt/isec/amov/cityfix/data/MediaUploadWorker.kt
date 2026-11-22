@@ -9,7 +9,11 @@ import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
 import pt.isec.amov.cityfix.model.SyncStatus
+import pt.isec.amov.cityfix.utils.FileUtils
 import pt.isec.amov.cityfix.utils.ImageUtils
+import android.net.Uri
+import com.google.firebase.storage.storageMetadata
+import java.io.File
 
 /**
  * Trabalho em segundo plano (WorkManager) que envia as imagens de um incidente para o Firebase Storage.
@@ -34,22 +38,31 @@ class MediaUploadWorker(
             val incident = document.get().await().toIncident()
                 ?: return Result.failure() // o incidente foi apagado entretanto
 
-            // Imagens: até 1600 px, qualidade 80 (ficheiros que já não existem são ignorados)
+            // Imagens: até 1600 px, qualidade 80. Vídeos: enviados como estão (já vêm comprimidos
+            // pela câmara). Ficheiros que já não existem são ignorados.
             val urls = incident.mediaPaths.mapIndexedNotNull { index, path ->
-                val bytes = ImageUtils.compress(path, maxSide = 1600, quality = 80) ?: return@mapIndexedNotNull null
-                val ref = folder.child("photo_$index.jpg")
-                ref.putBytes(bytes).await()
-                ref.downloadUrl.await().toString()
-            }
-
-            // Miniatura: 320 px, gerada a partir da primeira imagem
-            val thumbnailUrl = incident.mediaPaths.firstOrNull()
-                ?.let { ImageUtils.compress(it, maxSide = 320, quality = 70) }
-                ?.let { bytes ->
-                    val ref = folder.child("thumb.jpg")
+                if (FileUtils.isVideo(path)) {
+                    val file = File(path).takeIf { it.exists() } ?: return@mapIndexedNotNull null
+                    val ref = folder.child("video_$index.mp4")
+                    ref.putFile(Uri.fromFile(file), storageMetadata { contentType = "video/mp4" }).await()
+                    ref.downloadUrl.await().toString()
+                } else {
+                    val bytes = ImageUtils.compress(path, maxSide = 1600, quality = 80) ?: return@mapIndexedNotNull null
+                    val ref = folder.child("photo_$index.jpg")
                     ref.putBytes(bytes).await()
                     ref.downloadUrl.await().toString()
                 }
+            }
+
+            // Miniatura: 320 px, gerada a partir da primeira imagem (ou, se só houver vídeos, de um frame do primeiro)
+            val firstImage = incident.mediaPaths.firstOrNull { !FileUtils.isVideo(it) }
+            val thumbBytes = if (firstImage != null) ImageUtils.compress(firstImage, maxSide = 320, quality = 70)
+            else incident.mediaPaths.firstOrNull()?.let { ImageUtils.videoThumbnail(it, maxSide = 320, quality = 70) }
+            val thumbnailUrl = thumbBytes?.let { bytes ->
+                val ref = folder.child("thumb.jpg")
+                ref.putBytes(bytes).await()
+                ref.downloadUrl.await().toString()
+            }
 
             document.update(
                 mapOf(
